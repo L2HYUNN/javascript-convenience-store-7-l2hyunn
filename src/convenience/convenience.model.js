@@ -3,6 +3,7 @@ class ConvenienceModel {
 
   static ERROR_MESSAGE = Object.freeze({
     CAN_NOT_BE_EMPTY: '[ERROR] 빈 값은 입력할 수 없어요',
+    INVALID_INPUT: '[ERROR] 잘못된 입력입니다. 다시 입력해 주세요.',
     INVALID_INPUT_FORMAT: '[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.',
     PRODUCT_NOT_FOUND: '[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요.',
   });
@@ -93,6 +94,18 @@ class ConvenienceModel {
         throw new Error(ConvenienceModel.ERROR_MESSAGE.PRODUCT_NOT_FOUND);
       }
     });
+  }
+
+  validateMembershipDiscount(membershipDiscount) {
+    const validMembershipDiscountFormat = ['Y', 'N'];
+
+    if (membershipDiscount === '') {
+      throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
+    }
+
+    if (!validMembershipDiscountFormat.includes(membershipDiscount)) {
+      throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
+    }
   }
 }
 
