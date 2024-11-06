@@ -1,6 +1,10 @@
-import { output } from '../lib/view.js';
+import { input, output } from '../lib/view.js';
 
 class ConvenienceView {
+  static QUERY = Object.freeze({
+    GET_PRODUCT_INFO: '구매하실 상품명과 수량을 입력해 주세요. (예: [사이다-2],[감자칩-1])',
+  });
+
   static MESSAGE = Object.freeze({
     WELCOME: '안녕하세요. W편의점입니다.',
     STOCKS_INFO: '현재 보유하고 있는 상품입니다.\n',
@@ -52,6 +56,12 @@ class ConvenienceView {
     });
 
     output(result.flat().join('\n'));
+  }
+
+  async getPurcharseInfo() {
+    const result = await input(ConvenienceView.QUERY.GET_PRODUCT_INFO);
+
+    return result;
   }
 }
 

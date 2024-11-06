@@ -1,6 +1,12 @@
 class ConvenienceModel {
   #stocks;
 
+  static ERROR_MESSAGE = Object.freeze({
+    CAN_NOT_BE_EMPTY: '[ERROR] 빈 값은 입력할 수 없어요',
+    INVALID_INPUT_FORMAT: '[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.',
+    PRODUCT_NOT_FOUND: '[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요.',
+  });
+
   constructor(stocks) {
     this.#stocks = stocks;
   }
@@ -56,6 +62,37 @@ class ConvenienceModel {
 
   getStocks() {
     return this.#parseStocks(this.#stocks);
+  }
+
+  // #parsePurchaseInfo(purchaseInfo) {
+  //   const regex = /^[가-힣]+-[1-9]\d*$/;
+
+  //   return purchaseInfo.split(',');
+  // }
+
+  validatePurchaseInfo(purchaseInfo) {
+    const purchaseInfoRegex = /^\[[가-힣]+-[1-9]\d*\]$/;
+    const purchaseInfoNameCaptureRegex = /^\[([가-힣]+)-[1-9]\d*\]$/;
+
+    if (purchaseInfo === '') {
+      throw new Error(ConvenienceModel.ERROR_MESSAGE.CAN_NOT_BE_EMPTY);
+    }
+
+    purchaseInfo.split(',').forEach((item) => {
+      if (!purchaseInfoRegex.test(item.trim())) {
+        throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT_FORMAT);
+      }
+    });
+
+    const stockNames = Object.keys(this.getStocks());
+
+    purchaseInfo.split(',').forEach((item) => {
+      const purchaseInfoName = item.trim().match(purchaseInfoNameCaptureRegex)[1];
+
+      if (!stockNames.some((stockName) => stockName === purchaseInfoName)) {
+        throw new Error(ConvenienceModel.ERROR_MESSAGE.PRODUCT_NOT_FOUND);
+      }
+    });
   }
 }
 
