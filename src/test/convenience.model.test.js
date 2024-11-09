@@ -49,9 +49,14 @@ describe('ConvenienceModel', () => {
         expectedError: ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT_FORMAT,
       },
       {
-        description: '존재하지 않는 상품을 입력한 경우 경우 에러를 발생시켜야한다',
+        description: '존재하지 않는 상품을 입력한 경우 에러를 발생시켜야한다',
         input: '[콜라-3], [에너지바-5]',
         expectedError: ConvenienceModel.ERROR_MESSAGE.PRODUCT_NOT_FOUND,
+      },
+      {
+        description: '구매 수량이 재고 수량을 초고한 경우 에러를 발생시켜야한다',
+        input: '[콜라-3], [물-7]',
+        expectedError: ConvenienceModel.ERROR_MESSAGE.STOCK_LIMIT_EXCEEDED,
       },
     ])('$description', ({ input, expectedError }) => {
       expect(() => convenienceModel.validatePurchaseInfo(input)).toThrow(expectedError);

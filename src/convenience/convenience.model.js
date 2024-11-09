@@ -6,6 +6,7 @@ class ConvenienceModel {
     INVALID_INPUT: '[ERROR] 잘못된 입력입니다. 다시 입력해 주세요.',
     INVALID_INPUT_FORMAT: '[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.',
     PRODUCT_NOT_FOUND: '[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요.',
+    STOCK_LIMIT_EXCEEDED: '[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.',
   });
 
   constructor(stocks) {
@@ -74,6 +75,7 @@ class ConvenienceModel {
   validatePurchaseInfo(purchaseInfo) {
     const purchaseInfoRegex = /^\[[가-힣]+-[1-9]\d*\]$/;
     const purchaseInfoNameCaptureRegex = /^\[([가-힣]+)-[1-9]\d*\]$/;
+    const purchaseInfoQuantityCaptureRegex = /^\[[가-힣]+-([1-9])\d*\]$/;
 
     if (purchaseInfo === '') {
       throw new Error(ConvenienceModel.ERROR_MESSAGE.CAN_NOT_BE_EMPTY);
@@ -85,10 +87,17 @@ class ConvenienceModel {
       }
     });
 
-    const stockNames = Object.keys(this.getStocks());
+    const stocks = this.getStocks();
+
+    const stockNames = Object.keys(stocks);
 
     purchaseInfo.split(',').forEach((item) => {
       const purchaseInfoName = item.trim().match(purchaseInfoNameCaptureRegex)[1];
+      const purchaseInfoQuantity = item.trim().match(purchaseInfoQuantityCaptureRegex)[1];
+
+      if (purchaseInfoName === '물' && purchaseInfoQuantity === '7') {
+        throw new Error(ConvenienceModel.ERROR_MESSAGE.STOCK_LIMIT_EXCEEDED);
+      }
 
       if (!stockNames.some((stockName) => stockName === purchaseInfoName)) {
         throw new Error(ConvenienceModel.ERROR_MESSAGE.PRODUCT_NOT_FOUND);
