@@ -79,4 +79,21 @@ describe('ConvenienceModel', () => {
       expect(() => convenienceModel.validateMembershipDiscount(input)).toThrow(expectedError);
     });
   });
+
+  describe('유효한 재구매 여부가 입력되지 않은 경우 에러를 발생시켜야한다', () => {
+    it.each([
+      {
+        description: '빈 값이 입력된 경우 에러를 발생시켜야한다',
+        input: '',
+        expectedError: ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT,
+      },
+      {
+        description: '유효하지 않은 형식이 입력된 경우 에러를 발생시켜야한다',
+        input: 'Yes',
+        expectedError: ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT,
+      },
+    ])('$description', ({ input, expectedError }) => {
+      expect(() => convenienceModel.validateAdditionalPurchaseWanted(input)).toThrow(expectedError);
+    });
+  });
 });

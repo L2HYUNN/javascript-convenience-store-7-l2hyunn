@@ -116,6 +116,18 @@ class ConvenienceModel {
       throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
     }
   }
+
+  validateAdditionalPurchaseWanted(additionalPurchaseWanted) {
+    const validAdditionalPurchaseWantedFormat = ['Y', 'N'];
+
+    if (additionalPurchaseWanted === '') {
+      throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
+    }
+
+    if (!validAdditionalPurchaseWantedFormat.includes(additionalPurchaseWanted)) {
+      throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
+    }
+  }
 }
 
 export default ConvenienceModel;
