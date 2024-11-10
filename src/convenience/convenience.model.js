@@ -5,6 +5,8 @@ class ConvenienceModel {
 
   #promotionInfo = {};
 
+  #receipt = {};
+
   static ERROR_MESSAGE = Object.freeze({
     CAN_NOT_BE_EMPTY: '[ERROR] 빈 값은 입력할 수 없어요',
     INVALID_INPUT: '[ERROR] 잘못된 입력입니다. 다시 입력해 주세요.',
@@ -287,41 +289,81 @@ class ConvenienceModel {
     return null;
   }
 
-  getReceipt(parsedPurchaseInfo, isMembershipDiscount) {
-    const receipt = { ...ConvenienceModel.RECEIPT.DEFAULT };
+  #initializeReceipt() {
+    this.#receipt = { ...ConvenienceModel.RECEIPT.DEFAULT };
+  }
 
-    parsedPurchaseInfo.forEach((info) => {
-      receipt.purchaseInfo.push({
-        name: info.name,
-        quantity: info.quantity,
-        price: info.quantity * this.#stockInfo[info.name].default.price,
-      });
+  #addPurchaseInfoToReceipt(purchaseInfo) {
+    const { name, quantity } = purchaseInfo;
 
-      receipt.totalPurchasePrice.quantity += info.quantity;
-      receipt.totalPurchasePrice.price += info.quantity * this.#stockInfo[info.name].default.price;
-
-      const promotableItem = this.getPromotionInfo(info);
-
-      if (promotableItem) {
-        receipt.promotionInfo.push(promotableItem);
-      }
+    this.#receipt.purchaseInfo.push({
+      name,
+      quantity,
+      price: quantity * this.#stockInfo[name].default.price,
     });
+  }
 
-    receipt.promotionInfo.forEach((info) => {
-      receipt.promotionDiscountPrice += info.quantity * this.#stockInfo[info.name].default.price;
-    });
+  #addTotalPurchasePriceToReceipt(purchaseInfo) {
+    const { name, quantity } = purchaseInfo;
 
-    if (isMembershipDiscount === 'Y') {
-      receipt.membershipDiscountPrice =
-        (receipt.totalPurchasePrice.price - receipt.promotionDiscountPrice) * 0.3;
+    this.#receipt.totalPurchasePrice.quantity += quantity;
+    this.#receipt.totalPurchasePrice.price += quantity * this.#stockInfo[name].default.price;
+  }
+
+  #addPromotionInfoToReceipt(purchaseInfo) {
+    const promotionInfo = this.getPromotionInfo(purchaseInfo);
+
+    if (promotionInfo) {
+      this.#receipt.promotionInfo.push(promotionInfo);
     }
+  }
 
-    receipt.amountDue =
-      receipt.totalPurchasePrice.price -
-      receipt.promotionDiscountPrice -
-      receipt.membershipDiscountPrice;
+  #addBasicInfoToReceipt(parsedPurchaseInfo) {
+    parsedPurchaseInfo.forEach((info) => {
+      this.#addPurchaseInfoToReceipt(info);
+      this.#addTotalPurchasePriceToReceipt(info);
+      this.#addPromotionInfoToReceipt(info);
+    });
+  }
 
-    return receipt;
+  #addPromotionDiscountPriceToReceipt() {
+    this.#receipt.promotionInfo.forEach((info) => {
+      this.#receipt.promotionDiscountPrice +=
+        info.quantity * this.#stockInfo[info.name].default.price;
+    });
+  }
+
+  #addMembershipDiscountPriceToReceipt(isMembershipDiscount) {
+    if (isMembershipDiscount === 'Y') {
+      this.#receipt.membershipDiscountPrice =
+        (this.#receipt.totalPurchasePrice.price - this.#receipt.promotionDiscountPrice) * 0.3;
+    }
+  }
+
+  #addDiscountInfoToReceipt(isMembershipDiscount) {
+    this.#addPromotionDiscountPriceToReceipt();
+    this.#addMembershipDiscountPriceToReceipt(isMembershipDiscount);
+  }
+
+  #addAmountDueToReceipt() {
+    this.#receipt.amountDue =
+      this.#receipt.totalPurchasePrice.price -
+      this.#receipt.promotionDiscountPrice -
+      this.#receipt.membershipDiscountPrice;
+  }
+
+  #generateReceipt(parsedPurchaseInfo, isMembershipDiscount) {
+    this.#initializeReceipt();
+
+    this.#addBasicInfoToReceipt(parsedPurchaseInfo);
+    this.#addDiscountInfoToReceipt(isMembershipDiscount);
+    this.#addAmountDueToReceipt();
+  }
+
+  getReceipt(parsedPurchaseInfo, isMembershipDiscount) {
+    this.#generateReceipt(parsedPurchaseInfo, isMembershipDiscount);
+
+    return this.#receipt;
   }
 
   validatePurchaseInfo(purchaseInfo) {
