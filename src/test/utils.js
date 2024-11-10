@@ -5,3 +5,9 @@ export const getLogSpy = () => {
   logSpy.mockClear();
   return logSpy;
 };
+
+export const mockNowDate = (date = null) => {
+  const mockDateTimes = jest.spyOn(MissionUtils.DateTimes, 'now');
+  mockDateTimes.mockReturnValue(new Date(date));
+  return mockDateTimes;
+};

@@ -1,4 +1,5 @@
 import { DateTimes } from '@woowacourse/mission-utils';
+import { getISODateString } from '../lib/utils.js';
 
 class ConvenienceModel {
   #stockInfo = {};
@@ -146,15 +147,13 @@ class ConvenienceModel {
   getPromotableItem(parsedPurchaseInfo) {
     const { name, quantity } = parsedPurchaseInfo;
 
-    const promotionName = this.#stockInfo[name].promotion?.promotion;
-
     if (this.#hasPromotion(name)) {
-      const promotions = this.getPromotions();
       const stockQuantity = this.#stockInfo[name].promotion.quantity;
+      const promotionName = this.#stockInfo[name].promotion?.promotion;
 
-      const { buy, startDate, endDate } = promotions[promotionName];
+      const { buy, startDate, endDate } = this.#promotionInfo[promotionName];
 
-      const today = DateTimes.now().toISOString().split('T')[0];
+      const today = getISODateString();
 
       const isPromotable =
         new Date(startDate) <= new Date(today) &&
