@@ -3,10 +3,6 @@ import path from 'path';
 import fs from 'fs';
 import { __dirname } from './dirname.cjs';
 
-// export function getDirname() {
-//   return path.dirname(fileURLToPath(import.meta.url));
-// }
-
 export function read(filePath) {
   try {
     const data = fs.readFileSync(path.resolve(__dirname, filePath), 'utf-8');
