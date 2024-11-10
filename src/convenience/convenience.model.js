@@ -1,4 +1,3 @@
-import { DateTimes } from '@woowacourse/mission-utils';
 import { getISODateString } from '../lib/utils.js';
 
 class ConvenienceModel {
@@ -234,34 +233,44 @@ class ConvenienceModel {
     return parsedPurchaseInfo.map((info) => this.getNonPromotionalItem(info));
   }
 
+  #isPromotableInfo(purchaseInfoName) {
+    const { buy: promotionBuy, get: promotionGet } = this.#getPromotionInfoDetail(purchaseInfoName);
+
+    return (
+      this.#isPromotableDate(purchaseInfoName) &&
+      this.#getPromotionStockQuantity(purchaseInfoName) >= promotionBuy + promotionGet
+    );
+  }
+
+  #calculatePromotableInfo(purchaseInfoName, purchaseInfoQuantity) {
+    const { buy: promotionBuy, get: promotionGet } = this.#getPromotionInfoDetail(purchaseInfoName);
+
+    const promotableStockCount = Math.trunc(
+      this.#getPromotionStockQuantity(purchaseInfoName) / (promotionBuy + promotionGet),
+    );
+    const promotableCount = Math.trunc(purchaseInfoQuantity / (promotionBuy + promotionGet));
+
+    return { promotableCount, promotableStockCount };
+  }
+
+  #createPromotableInfo(purchaseInfoName, purchaseInfoQuantity) {
+    const { promotableCount, promotableStockCount } = this.#calculatePromotableInfo(
+      purchaseInfoName,
+      purchaseInfoQuantity,
+    );
+
+    if (promotableCount <= promotableStockCount) {
+      return { name: purchaseInfoName, quantity: promotableCount };
+    }
+
+    return { name: purchaseInfoName, quantity: promotableStockCount };
+  }
+
   getPromotionInfo(parsedPurchaseInfo) {
     const { name, quantity } = parsedPurchaseInfo;
 
-    const hasPromotion = Boolean(this.#stockInfo[name].promotion);
-    const promotionName = this.#stockInfo[name].promotion?.promotion;
-
-    if (hasPromotion) {
-      const promotions = this.getPromotions();
-      const stockQuantity = this.#stockInfo[name].promotion.quantity;
-
-      const { buy, get, startDate, endDate } = promotions[promotionName];
-
-      const today = DateTimes.now().toISOString().split('T')[0];
-
-      const isPromotable =
-        new Date(startDate) <= new Date(today) &&
-        new Date(today) < new Date(endDate) &&
-        stockQuantity >= buy + get;
-
-      const promotableStockCount = Math.trunc(stockQuantity / (buy + get));
-      const promotableCount = Math.trunc(quantity / (buy + get));
-
-      if (isPromotable) {
-        if (promotableCount <= promotableStockCount) {
-          return { name, quantity: promotableCount };
-        }
-        return { name, quantity: promotableStockCount };
-      }
+    if (this.#hasPromotion(name) && this.#isPromotableInfo(name, quantity)) {
+      return this.#createPromotableInfo(name, quantity);
     }
 
     return null;
