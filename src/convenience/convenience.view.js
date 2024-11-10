@@ -7,6 +7,8 @@ class ConvenienceView {
     GET_IS_ADDITIONAL_PURCHASE_WANTED: '감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)',
     GET_SHOULD_ADD_ITEM_FOR_PROMOTION: (promotableItem) =>
       `현재 ${promotableItem}은(는) 1개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)`,
+    GET_SHOULD_ADD_ITEM_WITHOUT_PROMOTION: (name, quantity) =>
+      `현재 ${name} ${quantity}개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)`,
   });
 
   static MESSAGE = Object.freeze({
@@ -88,6 +90,14 @@ class ConvenienceView {
   async getShouldAddItemForPromotion(promotableItem) {
     const result = await input(
       ConvenienceView.QUERY.GET_SHOULD_ADD_ITEM_FOR_PROMOTION(promotableItem),
+    );
+
+    return result;
+  }
+
+  async getShouldAddItemWithoutPromotion(name, quantity) {
+    const result = await input(
+      ConvenienceView.QUERY.GET_SHOULD_ADD_ITEM_WITHOUT_PROMOTION(name, quantity),
     );
 
     return result;

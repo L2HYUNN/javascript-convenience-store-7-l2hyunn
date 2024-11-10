@@ -103,8 +103,8 @@ class ConvenienceModel {
   // }
 
   parsePurchaseInfo(purchaseInfo) {
-    const purchaseInfoNameCaptureRegex = /^\[([가-힣]+)-[1-9]\d*\]$/;
-    const purchaseInfoQuantityCaptureRegex = /^\[[가-힣]+-([1-9])\d*\]$/;
+    const purchaseInfoNameCaptureRegex = /^\[([가-힣]+)-\d+\]$/;
+    const purchaseInfoQuantityCaptureRegex = /^\[[가-힣]+-(\d+)\]$/;
 
     return purchaseInfo.split(',').map((item) => {
       const purchaseInfoName = item.trim().match(purchaseInfoNameCaptureRegex)[1];
@@ -148,10 +148,47 @@ class ConvenienceModel {
     return parsedPurchaseInfo.map((info) => this.getPromotableItem(info));
   }
 
+  getNonPromotionalItem(parsedPurchaseInfo) {
+    const stocks = this.getStocks();
+
+    const { name, quantity } = parsedPurchaseInfo;
+
+    const hasPromotion = Boolean(stocks[name].promotion);
+    const promotionName = stocks[name].promotion?.promotion;
+
+    if (hasPromotion) {
+      const promotions = this.getPromotions();
+      const stockQuantity = stocks[name].promotion.quantity;
+
+      const { buy, get, startDate, endDate } = promotions[promotionName];
+
+      const today = DateTimes.now().toISOString().split('T')[0];
+
+      const isPromotable =
+        new Date(startDate) <= new Date(today) &&
+        new Date(today) < new Date(endDate) &&
+        quantity >= stockQuantity;
+
+      if (isPromotable) {
+        const promotableItemCount = buy + get;
+        const nonPromotionalItemInStockQuantity = stockQuantity % promotableItemCount;
+        const nonPromotionalItemInQuantity = quantity - stockQuantity;
+
+        return { name, quantity: nonPromotionalItemInStockQuantity + nonPromotionalItemInQuantity };
+      }
+    }
+
+    return null;
+  }
+
+  getNonPromotionalItems(parsedPurchaseInfo) {
+    return parsedPurchaseInfo.map((info) => this.getNonPromotionalItem(info));
+  }
+
   validatePurchaseInfo(purchaseInfo) {
-    const purchaseInfoRegex = /^\[[가-힣]+-[1-9]\d*\]$/;
-    const purchaseInfoNameCaptureRegex = /^\[([가-힣]+)-[1-9]\d*\]$/;
-    const purchaseInfoQuantityCaptureRegex = /^\[[가-힣]+-([1-9])\d*\]$/;
+    const purchaseInfoRegex = /^\[[가-힣]+-\d+\]$/;
+    const purchaseInfoNameCaptureRegex = /^\[([가-힣]+)-\d+\]$/;
+    const purchaseInfoQuantityCaptureRegex = /^\[[가-힣]+-(\d+)\]$/;
 
     if (purchaseInfo === '') {
       throw new Error(ConvenienceModel.ERROR_MESSAGE.CAN_NOT_BE_EMPTY);

@@ -1,3 +1,6 @@
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-continue */
+/* eslint-disable no-restricted-syntax */
 import { read } from '../lib/file.js';
 import ConvenienceModel from './convenience.model.js';
 import ConvenienceView from './convenience.view.js';
@@ -32,13 +35,12 @@ class ConvenienceController {
     const parsedPurchaseInfo = this.#model.parsePurchaseInfo(purchaseInfo);
     const promotableItems = this.#model.getPromotableItems(parsedPurchaseInfo);
     const shouldAddItemForPromotionList = [];
-    // eslint-disable-next-line no-restricted-syntax
+
     for (const promotableItem of promotableItems) {
       if (promotableItem === null) {
-        // eslint-disable-next-line no-continue
         continue;
       }
-      // eslint-disable-next-line no-await-in-loop
+
       const answer = await this.#view.getShouldAddItemForPromotion(promotableItem);
       this.#view.printLineBreak();
 
@@ -49,7 +51,29 @@ class ConvenienceController {
       }
     }
 
-    console.log(shouldAddItemForPromotionList);
+    const nonPromotionalItems = this.#model.getNonPromotionalItems(parsedPurchaseInfo);
+    const shouldAddItemWithoutPromotionList = [];
+
+    for (const nonPromotionalItem of nonPromotionalItems) {
+      if (nonPromotionalItem === null) {
+        continue;
+      }
+
+      const answer = await this.#view.getShouldAddItemWithoutPromotion(
+        nonPromotionalItem.name,
+        nonPromotionalItem.quantity,
+      );
+      this.#view.printLineBreak();
+
+      if (answer === 'Y') {
+        shouldAddItemWithoutPromotionList.push({
+          name: nonPromotionalItem.name,
+          quantity: nonPromotionalItem.quantity,
+        });
+      }
+    }
+
+    console.log(shouldAddItemWithoutPromotionList);
   }
 }
 

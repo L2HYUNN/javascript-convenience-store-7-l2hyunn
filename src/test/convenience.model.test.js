@@ -150,4 +150,22 @@ describe('ConvenienceModel', () => {
       expect(result).toEqual([null]);
     });
   });
+
+  describe('프로모션 재고가 부족하여 일부 수량을 프로모션 혜택 없이 결제해야 하는 경우', () => {
+    it('해당하는 상품의 상품명과 프로모션 혜택 없이 결제되는 수량을 반환해야 한다', () => {
+      const parsedInput = { name: '콜라', quantity: 15 };
+
+      const result = convenienceModel.getNonPromotionalItem(parsedInput);
+
+      expect(result).toEqual({ name: '콜라', quantity: 6 });
+    });
+
+    it('해당하는 상품의 상품명과 프로모션 혜택 없이 결제되는 수량을 포함한 객체를 배열의 형태로 반환해야 한다', () => {
+      const parsedInput = [{ name: '콜라', quantity: 15 }];
+
+      const result = convenienceModel.getNonPromotionalItems(parsedInput);
+
+      expect(result).toEqual([{ name: '콜라', quantity: 6 }]);
+    });
+  });
 });
