@@ -144,6 +144,12 @@ class ConvenienceModel {
     return Boolean(this.#stockInfo[purchaseInfoName].promotion);
   }
 
+  #isPromotableDate(startDate, endDate) {
+    const today = getISODateString();
+
+    return new Date(startDate) <= new Date(today) && new Date(today) < new Date(endDate);
+  }
+
   getPromotableItem(parsedPurchaseInfo) {
     const { name, quantity } = parsedPurchaseInfo;
 
@@ -153,11 +159,8 @@ class ConvenienceModel {
 
       const { buy, startDate, endDate } = this.#promotionInfo[promotionName];
 
-      const today = getISODateString();
-
       const isPromotable =
-        new Date(startDate) <= new Date(today) &&
-        new Date(today) < new Date(endDate) &&
+        this.#isPromotableDate(startDate, endDate) &&
         quantity % buy === 0 &&
         quantity < stockQuantity;
 
