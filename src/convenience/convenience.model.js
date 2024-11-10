@@ -17,6 +17,12 @@ class ConvenienceModel {
     DEFAULT: { default: { price: 0, quantity: 0 }, promotion: null },
   };
 
+  static REGEX = {
+    PURCHASE_INFO: /^\[[가-힣]+-\d+\]$/,
+    PURCHASE_INFO_NAME_CAPTURE: /^\[([가-힣]+)-\d+\]$/,
+    PURCHASE_INFO_QUANTITY_CAPTURE: /^\[[가-힣]+-(\d+)\]$/,
+  };
+
   #parseMarkdownFileContents(fileContents) {
     return fileContents
       .trim()
@@ -119,12 +125,13 @@ class ConvenienceModel {
   }
 
   parsePurchaseInfo(purchaseInfo) {
-    const purchaseInfoNameCaptureRegex = /^\[([가-힣]+)-\d+\]$/;
-    const purchaseInfoQuantityCaptureRegex = /^\[[가-힣]+-(\d+)\]$/;
-
     return purchaseInfo.split(',').map((item) => {
-      const purchaseInfoName = item.trim().match(purchaseInfoNameCaptureRegex)[1];
-      const purchaseInfoQuantity = item.trim().match(purchaseInfoQuantityCaptureRegex)[1];
+      const purchaseInfoName = item
+        .trim()
+        .match(ConvenienceModel.REGEX.PURCHASE_INFO_NAME_CAPTURE)[1];
+      const purchaseInfoQuantity = item
+        .trim()
+        .match(ConvenienceModel.REGEX.PURCHASE_INFO_QUANTITY_CAPTURE)[1];
 
       return { name: purchaseInfoName, quantity: Number(purchaseInfoQuantity) };
     });
@@ -283,16 +290,12 @@ class ConvenienceModel {
   }
 
   validatePurchaseInfo(purchaseInfo) {
-    const purchaseInfoRegex = /^\[[가-힣]+-\d+\]$/;
-    const purchaseInfoNameCaptureRegex = /^\[([가-힣]+)-\d+\]$/;
-    const purchaseInfoQuantityCaptureRegex = /^\[[가-힣]+-(\d+)\]$/;
-
     if (purchaseInfo === '') {
       throw new Error(ConvenienceModel.ERROR_MESSAGE.CAN_NOT_BE_EMPTY);
     }
 
     purchaseInfo.split(',').forEach((item) => {
-      if (!purchaseInfoRegex.test(item.trim())) {
+      if (!ConvenienceModel.REGEX.PURCHASE_INFO.test(item.trim())) {
         throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT_FORMAT);
       }
     });
@@ -302,8 +305,12 @@ class ConvenienceModel {
     const stockNames = Object.keys(stocks);
 
     purchaseInfo.split(',').forEach((item) => {
-      const purchaseInfoName = item.trim().match(purchaseInfoNameCaptureRegex)[1];
-      const purchaseInfoQuantity = item.trim().match(purchaseInfoQuantityCaptureRegex)[1];
+      const purchaseInfoName = item
+        .trim()
+        .match(ConvenienceModel.REGEX.PURCHASE_INFO_NAME_CAPTURE)[1];
+      const purchaseInfoQuantity = item
+        .trim()
+        .match(ConvenienceModel.REGEX.PURCHASE_INFO_QUANTITY_CAPTURE)[1];
 
       if (purchaseInfoName === '물' && purchaseInfoQuantity === '7') {
         throw new Error(ConvenienceModel.ERROR_MESSAGE.STOCK_LIMIT_EXCEEDED);
