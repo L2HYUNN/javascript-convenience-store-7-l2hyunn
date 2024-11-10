@@ -124,17 +124,19 @@ class ConvenienceModel {
     return this.#promotionInfo;
   }
 
-  parsePurchaseInfo(purchaseInfo) {
-    return purchaseInfo.split(',').map((item) => {
-      const purchaseInfoName = item
-        .trim()
-        .match(ConvenienceModel.REGEX.PURCHASE_INFO_NAME_CAPTURE)[1];
-      const purchaseInfoQuantity = item
-        .trim()
-        .match(ConvenienceModel.REGEX.PURCHASE_INFO_QUANTITY_CAPTURE)[1];
+  #findPurchaseInfoName(info) {
+    return info.trim().match(ConvenienceModel.REGEX.PURCHASE_INFO_NAME_CAPTURE)[1];
+  }
 
-      return { name: purchaseInfoName, quantity: Number(purchaseInfoQuantity) };
-    });
+  #findPurchaseInfoQuantity(info) {
+    return info.trim().match(ConvenienceModel.REGEX.PURCHASE_INFO_QUANTITY_CAPTURE)[1];
+  }
+
+  parsePurchaseInfo(purchaseInfo) {
+    return purchaseInfo.split(',').map((info) => ({
+      name: this.#findPurchaseInfoName(info),
+      quantity: Number(this.#findPurchaseInfoQuantity(info)),
+    }));
   }
 
   getPromotableItem(parsedPurchaseInfo) {
