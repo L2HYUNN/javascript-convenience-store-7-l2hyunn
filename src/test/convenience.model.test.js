@@ -41,7 +41,7 @@ describe('ConvenienceModel', () => {
       {
         description: '빈 값이 입력된 경우 에러를 발생시켜야한다',
         input: '',
-        expectedError: ConvenienceModel.ERROR_MESSAGE.CAN_NOT_BE_EMPTY,
+        expectedError: ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT,
       },
       {
         description: '구매할 상품과 수량 형식이 올바르지 않은 경우 에러를 발생시켜야한다',

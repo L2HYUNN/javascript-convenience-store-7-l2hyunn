@@ -33,6 +33,10 @@ class ConvenienceModel {
     PURCHASE_INFO_QUANTITY_CAPTURE: /^\[[가-힣]+-(\d+)\]$/,
   };
 
+  static FORMAT = {
+    ANSWER: ['Y', 'N'],
+  };
+
   constructor() {
     this.#stock = new StockModel();
   }
@@ -166,10 +170,20 @@ class ConvenienceModel {
     return this.#receipt;
   }
 
-  validatePurchaseInfo(purchaseInfo) {
-    if (purchaseInfo === '') {
-      throw new Error(ConvenienceModel.ERROR_MESSAGE.CAN_NOT_BE_EMPTY);
+  #validateIsEmpty(value) {
+    if (value === '') {
+      throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
     }
+  }
+
+  #validateIsAnswerFormat(value) {
+    if (!ConvenienceModel.FORMAT.ANSWER.includes(value)) {
+      throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
+    }
+  }
+
+  validatePurchaseInfo(purchaseInfo) {
+    this.#validateIsEmpty(purchaseInfo);
 
     purchaseInfo.split(',').forEach((item) => {
       if (!ConvenienceModel.REGEX.PURCHASE_INFO.test(item.trim())) {
@@ -180,12 +194,8 @@ class ConvenienceModel {
     const stockNames = Object.keys(this.#stock.getStock());
 
     purchaseInfo.split(',').forEach((item) => {
-      const purchaseInfoName = item
-        .trim()
-        .match(ConvenienceModel.REGEX.PURCHASE_INFO_NAME_CAPTURE)[1];
-      const purchaseInfoQuantity = item
-        .trim()
-        .match(ConvenienceModel.REGEX.PURCHASE_INFO_QUANTITY_CAPTURE)[1];
+      const purchaseInfoName = this.#findPurchaseInfoName(item);
+      const purchaseInfoQuantity = this.#findPurchaseInfoQuantity(item);
 
       if (purchaseInfoName === '물' && purchaseInfoQuantity === '7') {
         throw new Error(ConvenienceModel.ERROR_MESSAGE.STOCK_LIMIT_EXCEEDED);
@@ -198,27 +208,13 @@ class ConvenienceModel {
   }
 
   validateMembershipDiscount(membershipDiscount) {
-    const validMembershipDiscountFormat = ['Y', 'N'];
-
-    if (membershipDiscount === '') {
-      throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
-    }
-
-    if (!validMembershipDiscountFormat.includes(membershipDiscount)) {
-      throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
-    }
+    this.#validateIsEmpty(membershipDiscount);
+    this.#validateIsAnswerFormat(membershipDiscount);
   }
 
   validateAdditionalPurchaseWanted(additionalPurchaseWanted) {
-    const validAdditionalPurchaseWantedFormat = ['Y', 'N'];
-
-    if (additionalPurchaseWanted === '') {
-      throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
-    }
-
-    if (!validAdditionalPurchaseWantedFormat.includes(additionalPurchaseWanted)) {
-      throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
-    }
+    this.#validateIsEmpty(additionalPurchaseWanted);
+    this.#validateIsAnswerFormat(additionalPurchaseWanted);
   }
 }
 
