@@ -140,16 +140,14 @@ class ConvenienceModel {
   }
 
   getPromotableItem(parsedPurchaseInfo) {
-    const stocks = this.getStocks();
-
     const { name, quantity } = parsedPurchaseInfo;
 
-    const hasPromotion = Boolean(stocks[name].promotion);
-    const promotionName = stocks[name].promotion?.promotion;
+    const hasPromotion = Boolean(this.#stockInfo[name].promotion);
+    const promotionName = this.#stockInfo[name].promotion?.promotion;
 
     if (hasPromotion) {
       const promotions = this.getPromotions();
-      const stockQuantity = stocks[name].promotion.quantity;
+      const stockQuantity = this.#stockInfo[name].promotion.quantity;
 
       const { buy, startDate, endDate } = promotions[promotionName];
 
@@ -174,16 +172,14 @@ class ConvenienceModel {
   }
 
   getNonPromotionalItem(parsedPurchaseInfo) {
-    const stocks = this.getStocks();
-
     const { name, quantity } = parsedPurchaseInfo;
 
-    const hasPromotion = Boolean(stocks[name].promotion);
-    const promotionName = stocks[name].promotion?.promotion;
+    const hasPromotion = Boolean(this.#stockInfo[name].promotion);
+    const promotionName = this.#stockInfo[name].promotion?.promotion;
 
     if (hasPromotion) {
       const promotions = this.getPromotions();
-      const stockQuantity = stocks[name].promotion.quantity;
+      const stockQuantity = this.#stockInfo[name].promotion.quantity;
 
       const { buy, get, startDate, endDate } = promotions[promotionName];
 
@@ -211,16 +207,14 @@ class ConvenienceModel {
   }
 
   getPromotionInfo(parsedPurchaseInfo) {
-    const stocks = this.getStocks();
-
     const { name, quantity } = parsedPurchaseInfo;
 
-    const hasPromotion = Boolean(stocks[name].promotion);
-    const promotionName = stocks[name].promotion?.promotion;
+    const hasPromotion = Boolean(this.#stockInfo[name].promotion);
+    const promotionName = this.#stockInfo[name].promotion?.promotion;
 
     if (hasPromotion) {
       const promotions = this.getPromotions();
-      const stockQuantity = stocks[name].promotion.quantity;
+      const stockQuantity = this.#stockInfo[name].promotion.quantity;
 
       const { buy, get, startDate, endDate } = promotions[promotionName];
 
@@ -246,8 +240,6 @@ class ConvenienceModel {
   }
 
   getReceipt(parsedPurchaseInfo, isMembershipDiscount) {
-    const stocks = this.getStocks();
-
     const receipt = {
       purchaseInfo: [],
       promotionInfo: [],
@@ -261,11 +253,11 @@ class ConvenienceModel {
       receipt.purchaseInfo.push({
         name: info.name,
         quantity: info.quantity,
-        price: info.quantity * stocks[info.name].default.price,
+        price: info.quantity * this.#stockInfo[info.name].default.price,
       });
 
       receipt.totalPurchasePrice.quantity += info.quantity;
-      receipt.totalPurchasePrice.price += info.quantity * stocks[info.name].default.price;
+      receipt.totalPurchasePrice.price += info.quantity * this.#stockInfo[info.name].default.price;
 
       const promotableItem = this.getPromotionInfo(info);
 
@@ -275,7 +267,7 @@ class ConvenienceModel {
     });
 
     receipt.promotionInfo.forEach((info) => {
-      receipt.promotionDiscountPrice += info.quantity * stocks[info.name].default.price;
+      receipt.promotionDiscountPrice += info.quantity * this.#stockInfo[info.name].default.price;
     });
 
     if (isMembershipDiscount === 'Y') {
@@ -302,9 +294,7 @@ class ConvenienceModel {
       }
     });
 
-    const stocks = this.getStocks();
-
-    const stockNames = Object.keys(stocks);
+    const stockNames = Object.keys(this.#stockInfo);
 
     purchaseInfo.split(',').forEach((item) => {
       const purchaseInfoName = item
