@@ -204,7 +204,7 @@ class ConvenienceModel {
       const isPromotable =
         new Date(startDate) <= new Date(today) &&
         new Date(today) < new Date(endDate) &&
-        quantity < stockQuantity;
+        stockQuantity >= buy + get;
 
       const promotableStockCount = Math.trunc(stockQuantity / (buy + get));
       const promotableCount = Math.trunc(quantity / (buy + get));
@@ -227,7 +227,7 @@ class ConvenienceModel {
       purchaseInfo: [],
       promotionInfo: [],
       totalPurchasePrice: { quantity: 0, price: 0 },
-      prmotionDiscountPrice: 0,
+      promotionDiscountPrice: 0,
       membershipDiscountPrice: 0,
       amountDue: 0,
     };
@@ -250,17 +250,17 @@ class ConvenienceModel {
     });
 
     receipt.promotionInfo.forEach((info) => {
-      receipt.prmotionDiscountPrice += info.quantity * stocks[info.name].default.price;
+      receipt.promotionDiscountPrice += info.quantity * stocks[info.name].default.price;
     });
 
-    if (isMembershipDiscount) {
+    if (isMembershipDiscount === 'Y') {
       receipt.membershipDiscountPrice =
-        (receipt.totalPurchasePrice.price - receipt.prmotionDiscountPrice) * 0.3;
+        (receipt.totalPurchasePrice.price - receipt.promotionDiscountPrice) * 0.3;
     }
 
     receipt.amountDue =
       receipt.totalPurchasePrice.price -
-      receipt.prmotionDiscountPrice -
+      receipt.promotionDiscountPrice -
       receipt.membershipDiscountPrice;
 
     return receipt;

@@ -1,15 +1,15 @@
 /* eslint-disable auto-js-extension/auto-js-extension */
 import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { __dirname } from './dirname.cjs';
 
-export function getDirname() {
-  return path.dirname(fileURLToPath(import.meta.url));
-}
+// export function getDirname() {
+//   return path.dirname(fileURLToPath(import.meta.url));
+// }
 
 export function read(filePath) {
   try {
-    const data = fs.readFileSync(path.resolve(getDirname(), filePath), 'utf-8');
+    const data = fs.readFileSync(path.resolve(__dirname, filePath), 'utf-8');
 
     return data;
   } catch (error) {

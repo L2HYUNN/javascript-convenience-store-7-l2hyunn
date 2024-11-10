@@ -175,7 +175,7 @@ describe('ConvenienceModel', () => {
       { name: '물', quantity: 5 },
     ];
 
-    const isMembershipDiscount = true;
+    const isMembershipDiscount = 'Y';
 
     const receipt = {
       purchaseInfo: [
@@ -184,7 +184,7 @@ describe('ConvenienceModel', () => {
       ],
       promotionInfo: [{ name: '콜라', quantity: 1 }],
       totalPurchasePrice: { quantity: 8, price: 5500 },
-      prmotionDiscountPrice: 1000,
+      promotionDiscountPrice: 1000,
       membershipDiscountPrice: 1350,
       amountDue: 3150,
     };

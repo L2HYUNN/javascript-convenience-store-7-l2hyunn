@@ -69,6 +69,42 @@ class ConvenienceView {
     output('');
   }
 
+  createReceiptMessage({ purchaseInfo, promotionInfo }) {
+    const purchaseInfoMessage = purchaseInfo
+      .map((info) => {
+        return `${info.name}		     ${info.quantity}         ${info.price.toLocaleString()}\n`;
+      })
+      .join('');
+
+    const promotionInfoMessage = promotionInfo
+      .map((info) => {
+        return `${info.name}		     ${info.quantity}\n`;
+      })
+      .join('');
+
+    return { purchaseInfoMessage, promotionInfoMessage };
+  }
+
+  printReceipt(receipt) {
+    const {
+      purchaseInfo,
+      promotionInfo,
+      totalPurchasePrice,
+      promotionDiscountPrice,
+      membershipDiscountPrice,
+      amountDue,
+    } = receipt;
+
+    const { purchaseInfoMessage, promotionInfoMessage } = this.createReceiptMessage({
+      purchaseInfo,
+      promotionInfo,
+    });
+
+    output(
+      `==============W 편의점================\n상품명		     수량      금액   \n${purchaseInfoMessage}\n=============증     정===============\n${promotionInfoMessage}====================================\n총구매액             ${totalPurchasePrice.quantity}        ${totalPurchasePrice.price.toLocaleString()}\n행사할인		       -${promotionDiscountPrice.toLocaleString()}\n멤버십할인		       -${membershipDiscountPrice.toLocaleString()}\n내실돈		               ${amountDue.toLocaleString()}\n`,
+    );
+  }
+
   async getPurcharseInfo() {
     const result = await input(ConvenienceView.QUERY.GET_PRODUCT_INFO);
 

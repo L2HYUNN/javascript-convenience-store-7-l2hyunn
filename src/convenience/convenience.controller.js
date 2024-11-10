@@ -88,7 +88,11 @@ class ConvenienceController {
       parsedPurchaseInfo[itemIndex].quantity -= item.quantity;
     });
 
-    console.log(this.#model.getReceipt(parsedPurchaseInfo, true));
+    const isMembershipDiscount = await this.#view.getIsMembershipDiscount();
+
+    const receipt = this.#model.getReceipt(parsedPurchaseInfo, isMembershipDiscount);
+
+    this.#view.printReceipt(receipt);
   }
 }
 
