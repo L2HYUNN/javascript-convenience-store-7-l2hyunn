@@ -10,8 +10,9 @@ describe('ConvenienceModel', () => {
     'name,buy,get,start_date,end_date\n탄산2+1,2,1,2024-01-01,2024-12-31\nMD추천상품,1,1,2024-01-01,2024-12-31\n반짝할인,1,1,2024-11-01,2024-11-30';
 
   beforeEach(() => {
-    convenienceModel = new ConvenienceModel(testProducts, testPromotions);
+    convenienceModel = new ConvenienceModel();
     convenienceModel.setStockInfo(testProducts);
+    convenienceModel.setPromotionInfo(testPromotions);
   });
 
   it('상품 목록 파일에 있는 내용을 불러와 상품 목록 객체로 저장할 수 있어야 한다', () => {

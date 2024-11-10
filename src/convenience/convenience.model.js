@@ -3,7 +3,7 @@ import { DateTimes } from '@woowacourse/mission-utils';
 class ConvenienceModel {
   #stockInfo = {};
 
-  #promotions;
+  #promotionInfo = {};
 
   static ERROR_MESSAGE = Object.freeze({
     CAN_NOT_BE_EMPTY: '[ERROR] 빈 값은 입력할 수 없어요',
@@ -16,10 +16,6 @@ class ConvenienceModel {
   static STOCK = {
     DEFAULT: { default: { price: 0, quantity: 0 }, promotion: null },
   };
-
-  constructor(_, promotions) {
-    this.#promotions = promotions;
-  }
 
   #parseMarkdownFileContents(fileContents) {
     return fileContents
@@ -94,29 +90,33 @@ class ConvenienceModel {
     return this.#stockInfo;
   }
 
-  #parsePromotions(promotions) {
-    const promotionInfo = {};
+  #fillPromotionInfoDetail(promotion) {
+    const [promotionName, promotionBuy, promotionGet, promotionStartDate, promotionEndDate] =
+      promotion;
 
+    this.#promotionInfo[promotionName] = {
+      buy: Number(promotionBuy),
+      get: Number(promotionGet),
+      startDate: promotionStartDate,
+      endDate: promotionEndDate,
+    };
+  }
+
+  #fillPromotionInfo(parsedPromotions) {
+    parsedPromotions.forEach((promotion) => {
+      this.#fillPromotionInfoDetail(promotion);
+    });
+  }
+
+  setPromotionInfo(promotions) {
     const parsedPromotions = this.#parseMarkdownFileContents(promotions);
 
-    parsedPromotions.forEach((promotion) => {
-      const [name, buy, get, startDate, endDate] = promotion;
-
-      promotionInfo[name] = { buy: Number(buy), get: Number(get), startDate, endDate };
-    });
-
-    return promotionInfo;
+    this.#fillPromotionInfo(parsedPromotions);
   }
 
   getPromotions() {
-    return this.#parsePromotions(this.#promotions);
+    return this.#promotionInfo;
   }
-
-  // #parsePurchaseInfo(purchaseInfo) {
-  //   const regex = /^[가-힣]+-[1-9]\d*$/;
-
-  //   return purchaseInfo.split(',');
-  // }
 
   parsePurchaseInfo(purchaseInfo) {
     const purchaseInfoNameCaptureRegex = /^\[([가-힣]+)-\d+\]$/;
