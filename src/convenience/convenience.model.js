@@ -1,4 +1,4 @@
-import { getISODateString } from '../lib/utils.js';
+import { getISODateString, parseMarkdownFileContents } from '../lib/utils.js';
 import StockModel from '../stock/stock.model.js';
 
 class ConvenienceModel {
@@ -37,14 +37,6 @@ class ConvenienceModel {
     this.#stock = new StockModel();
   }
 
-  #parseMarkdownFileContents(fileContents) {
-    return fileContents
-      .trim()
-      .split('\n')
-      .slice(1)
-      .map((fileContent) => fileContent.split(','));
-  }
-
   setStock(stocks) {
     this.#stock.setStock(stocks);
   }
@@ -72,7 +64,7 @@ class ConvenienceModel {
   }
 
   setPromotionInfo(promotions) {
-    const parsedPromotions = this.#parseMarkdownFileContents(promotions);
+    const parsedPromotions = parseMarkdownFileContents(promotions);
 
     this.#fillPromotionInfo(parsedPromotions);
   }

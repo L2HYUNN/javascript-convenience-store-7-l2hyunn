@@ -1,17 +1,11 @@
+import { parseMarkdownFileContents } from '../lib/utils.js';
+
 class StockModel {
   #stock = {};
 
   static stock = {
     default: { default: { price: 0, quantity: 0 }, promotion: null },
   };
-
-  #parseMarkdownFileContents(fileContents) {
-    return fileContents
-      .trim()
-      .split('\n')
-      .slice(1)
-      .map((fileContent) => fileContent.split(','));
-  }
 
   #initializeStock(parsedstock) {
     parsedstock.forEach((stock) => {
@@ -68,7 +62,7 @@ class StockModel {
   }
 
   setStock(stock) {
-    const parsedstock = this.#parseMarkdownFileContents(stock);
+    const parsedstock = parseMarkdownFileContents(stock);
 
     this.#initializeStock(parsedstock);
     this.#fillStock(parsedstock);
