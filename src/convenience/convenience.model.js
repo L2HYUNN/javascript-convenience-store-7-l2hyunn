@@ -1,7 +1,8 @@
 import { getISODateString } from '../lib/utils.js';
+import StockModel from '../stock/stock.model.js';
 
 class ConvenienceModel {
-  #stockInfo = {};
+  #stock;
 
   #promotionInfo = {};
 
@@ -14,10 +15,6 @@ class ConvenienceModel {
     PRODUCT_NOT_FOUND: '[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요.',
     STOCK_LIMIT_EXCEEDED: '[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.',
   });
-
-  static STOCK = {
-    DEFAULT: { default: { price: 0, quantity: 0 }, promotion: null },
-  };
 
   static RECEIPT = {
     DEFAULT: {
@@ -36,6 +33,10 @@ class ConvenienceModel {
     PURCHASE_INFO_QUANTITY_CAPTURE: /^\[[가-힣]+-(\d+)\]$/,
   };
 
+  constructor() {
+    this.#stock = new StockModel();
+  }
+
   #parseMarkdownFileContents(fileContents) {
     return fileContents
       .trim()
@@ -44,69 +45,12 @@ class ConvenienceModel {
       .map((fileContent) => fileContent.split(','));
   }
 
-  #initializeStockInfo(parsedStocks) {
-    parsedStocks.forEach((stock) => {
-      const [stockName] = stock;
-
-      this.#stockInfo[stockName] = {
-        ...ConvenienceModel.STOCK.DEFAULT,
-      };
-    });
-  }
-
-  #fillDefaultStockInfoInPromotion(stock) {
-    const [stockName, stockPrice, _, stockPromotion] = stock;
-
-    if (stockPromotion === 'null') return;
-
-    this.#stockInfo[stockName].default = {
-      price: Number(stockPrice),
-      quantity: 0,
-    };
-  }
-
-  #fillPromotionStockInfoInPromotion(stock) {
-    const [stockName, stockPrice, stockQuantity, stockPromotion] = stock;
-
-    if (stockPromotion === 'null') return;
-
-    this.#stockInfo[stockName].promotion = {
-      price: Number(stockPrice),
-      quantity: Number(stockQuantity),
-      promotion: stockPromotion,
-    };
-  }
-
-  #fillStockInfoInPromotion(stock) {
-    this.#fillDefaultStockInfoInPromotion(stock);
-    this.#fillPromotionStockInfoInPromotion(stock);
-  }
-
-  #fillStockInfoInDefault(stock) {
-    const [stockName, stockPrice, stockQuantity, stockPromotion] = stock;
-
-    if (stockPromotion !== 'null') return;
-
-    this.#stockInfo[stockName].default.price = Number(stockPrice);
-    this.#stockInfo[stockName].default.quantity = Number(stockQuantity);
-  }
-
-  #fillStockInfo(parsedStocks) {
-    parsedStocks.forEach((stock) => {
-      this.#fillStockInfoInPromotion(stock);
-      this.#fillStockInfoInDefault(stock);
-    });
-  }
-
-  setStockInfo(stocks) {
-    const parsedStocks = this.#parseMarkdownFileContents(stocks);
-
-    this.#initializeStockInfo(parsedStocks);
-    this.#fillStockInfo(parsedStocks);
+  setStock(stocks) {
+    this.#stock.setStock(stocks);
   }
 
   getStocks() {
-    return this.#stockInfo;
+    return this.#stock.getStock();
   }
 
   #fillPromotionInfoDetail(promotion) {
@@ -153,17 +97,17 @@ class ConvenienceModel {
   }
 
   #getPromotionInfoDetail(purchaseInfoName) {
-    const promotionName = this.#stockInfo[purchaseInfoName].promotion?.promotion;
+    const promotionName = this.#stock.getStock()[purchaseInfoName].promotion?.promotion;
 
     return this.#promotionInfo[promotionName];
   }
 
   #getPromotionStockQuantity(purchaseInfoName) {
-    return this.#stockInfo[purchaseInfoName].promotion.quantity;
+    return this.#stock.getStock()[purchaseInfoName].promotion.quantity;
   }
 
   #hasPromotion(purchaseInfoName) {
-    return Boolean(this.#stockInfo[purchaseInfoName].promotion);
+    return Boolean(this.#stock.getStock()[purchaseInfoName].promotion);
   }
 
   #isPromotableDate(purchaseInfoName) {
@@ -299,7 +243,7 @@ class ConvenienceModel {
     this.#receipt.purchaseInfo.push({
       name,
       quantity,
-      price: quantity * this.#stockInfo[name].default.price,
+      price: quantity * this.#stock.getStock()[name].default.price,
     });
   }
 
@@ -307,7 +251,7 @@ class ConvenienceModel {
     const { name, quantity } = purchaseInfo;
 
     this.#receipt.totalPurchasePrice.quantity += quantity;
-    this.#receipt.totalPurchasePrice.price += quantity * this.#stockInfo[name].default.price;
+    this.#receipt.totalPurchasePrice.price += quantity * this.#stock.getStock()[name].default.price;
   }
 
   #addPromotionInfoToReceipt(purchaseInfo) {
@@ -329,7 +273,7 @@ class ConvenienceModel {
   #addPromotionDiscountPriceToReceipt() {
     this.#receipt.promotionInfo.forEach((info) => {
       this.#receipt.promotionDiscountPrice +=
-        info.quantity * this.#stockInfo[info.name].default.price;
+        info.quantity * this.#stock.getStock()[info.name].default.price;
     });
   }
 
@@ -377,7 +321,7 @@ class ConvenienceModel {
       }
     });
 
-    const stockNames = Object.keys(this.#stockInfo);
+    const stockNames = Object.keys(this.#stock.getStock());
 
     purchaseInfo.split(',').forEach((item) => {
       const purchaseInfoName = item

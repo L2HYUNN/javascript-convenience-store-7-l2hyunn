@@ -11,7 +11,7 @@ describe('ConvenienceModel', () => {
 
   beforeEach(() => {
     convenienceModel = new ConvenienceModel();
-    convenienceModel.setStockInfo(testProducts);
+    convenienceModel.setStock(testProducts);
     convenienceModel.setPromotionInfo(testPromotions);
   });
 
