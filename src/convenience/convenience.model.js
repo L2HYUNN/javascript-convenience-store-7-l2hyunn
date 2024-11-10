@@ -140,33 +140,42 @@ class ConvenienceModel {
     }));
   }
 
+  #getPromotionInfoDetail(purchaseInfoName) {
+    const promotionName = this.#stockInfo[purchaseInfoName].promotion?.promotion;
+
+    return this.#promotionInfo[promotionName];
+  }
+
   #hasPromotion(purchaseInfoName) {
     return Boolean(this.#stockInfo[purchaseInfoName].promotion);
   }
 
-  #isPromotableDate(startDate, endDate) {
+  #isPromotableDate(purchaseInfoName) {
+    const { startDate, endDate } = this.#getPromotionInfoDetail(purchaseInfoName);
     const today = getISODateString();
 
     return new Date(startDate) <= new Date(today) && new Date(today) < new Date(endDate);
   }
 
+  #isPromotableItem(purchaseInfoName, purchaseInfoQuantity) {
+    const stockQuantity = this.#stockInfo[purchaseInfoName].promotion.quantity;
+    const { buy: promotionBuy } = this.#getPromotionInfoDetail(purchaseInfoName);
+
+    return purchaseInfoQuantity % promotionBuy === 0 && purchaseInfoQuantity < stockQuantity;
+  }
+
+  #isPromotable(purchaseInfoName, purchaseInfoQuantity) {
+    return (
+      this.#isPromotableDate(purchaseInfoName) &&
+      this.#isPromotableItem(purchaseInfoName, purchaseInfoQuantity)
+    );
+  }
+
   getPromotableItem(parsedPurchaseInfo) {
     const { name, quantity } = parsedPurchaseInfo;
 
-    if (this.#hasPromotion(name)) {
-      const stockQuantity = this.#stockInfo[name].promotion.quantity;
-      const promotionName = this.#stockInfo[name].promotion?.promotion;
-
-      const { buy, startDate, endDate } = this.#promotionInfo[promotionName];
-
-      const isPromotable =
-        this.#isPromotableDate(startDate, endDate) &&
-        quantity % buy === 0 &&
-        quantity < stockQuantity;
-
-      if (isPromotable) {
-        return name;
-      }
+    if (this.#hasPromotion(name) && this.#isPromotable(name, quantity)) {
+      return name;
     }
 
     return null;
