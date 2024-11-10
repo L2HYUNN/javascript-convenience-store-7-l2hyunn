@@ -3,6 +3,8 @@ import { DateTimes } from '@woowacourse/mission-utils';
 class ConvenienceModel {
   #stocks;
 
+  #stockInfo = {};
+
   #promotions;
 
   static ERROR_MESSAGE = Object.freeze({
@@ -12,6 +14,10 @@ class ConvenienceModel {
     PRODUCT_NOT_FOUND: '[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요.',
     STOCK_LIMIT_EXCEEDED: '[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.',
   });
+
+  static STOCK = {
+    DEFAULT: { default: { price: 0, quantity: 0 }, promotion: null },
+  };
 
   constructor(stocks, promotions) {
     this.#stocks = stocks;
@@ -26,49 +32,67 @@ class ConvenienceModel {
       .map((fileContent) => fileContent.split(','));
   }
 
-  #parseStocks(stocks) {
-    const stockInfo = {};
-
-    // parsing
-    const parsedStocks = this.#parseMarkdownFileContents(stocks);
-
-    // init
+  #initializeStockInfo(parsedStocks) {
     parsedStocks.forEach((stock) => {
-      const [name] = stock;
+      const [stockName] = stock;
 
-      stockInfo[name] = {
-        default: { price: 0, quantity: 0 },
-        promotion: null,
+      this.#stockInfo[stockName] = {
+        ...ConvenienceModel.STOCK.DEFAULT,
       };
     });
+  }
 
-    // input
+  #fillDefaultStockInfoInPromotion(stock) {
+    const [stockName, stockPrice, _, stockPromotion] = stock;
+
+    if (stockPromotion === 'null') return;
+
+    this.#stockInfo[stockName].default = {
+      price: Number(stockPrice),
+      quantity: 0,
+    };
+  }
+
+  #fillPromotionStockInfoInPromotion(stock) {
+    const [stockName, stockPrice, stockQuantity, stockPromotion] = stock;
+
+    if (stockPromotion === 'null') return;
+
+    this.#stockInfo[stockName].promotion = {
+      price: Number(stockPrice),
+      quantity: Number(stockQuantity),
+      promotion: stockPromotion,
+    };
+  }
+
+  #fillStockInfoInPromotion(stock) {
+    this.#fillDefaultStockInfoInPromotion(stock);
+    this.#fillPromotionStockInfoInPromotion(stock);
+  }
+
+  #fillStockInfoInDefault(stock) {
+    const [stockName, stockPrice, stockQuantity, stockPromotion] = stock;
+
+    if (stockPromotion !== 'null') return;
+
+    this.#stockInfo[stockName].default.price = Number(stockPrice);
+    this.#stockInfo[stockName].default.quantity = Number(stockQuantity);
+  }
+
+  #fillStockInfo(parsedStocks) {
     parsedStocks.forEach((stock) => {
-      const [name, price, quantity, promotion] = stock;
-
-      // 프로모션이 존재하지 않는경우
-      // 기본 상품의 재고를 0로 초기화 하고 프로모션에 대한 정보를 기입한다.
-      if (promotion !== 'null') {
-        stockInfo[name].default = {
-          price: Number(price),
-          quantity: 0,
-        };
-
-        stockInfo[name].promotion = {
-          price: Number(price),
-          quantity: Number(quantity),
-          promotion,
-        };
-      }
-
-      // 프로모션이 존재하지 않지만 기본 재고가 있는 경우
-      if (promotion === 'null') {
-        stockInfo[name].default.price = Number(price);
-        stockInfo[name].default.quantity = Number(quantity);
-      }
+      this.#fillStockInfoInPromotion(stock);
+      this.#fillStockInfoInDefault(stock);
     });
+  }
 
-    return stockInfo;
+  #parseStocks(stocks) {
+    const parsedStocks = this.#parseMarkdownFileContents(stocks);
+
+    this.#initializeStockInfo(parsedStocks);
+    this.#fillStockInfo(parsedStocks);
+
+    return this.#stockInfo;
   }
 
   getStocks() {
@@ -78,7 +102,6 @@ class ConvenienceModel {
   #parsePromotions(promotions) {
     const promotionInfo = {};
 
-    // parsing
     const parsedPromotions = this.#parseMarkdownFileContents(promotions);
 
     parsedPromotions.forEach((promotion) => {
