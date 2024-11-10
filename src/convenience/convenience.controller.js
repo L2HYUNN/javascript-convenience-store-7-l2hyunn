@@ -14,8 +14,8 @@ class ConvenienceController {
     this.#view = view;
     this.#model = model;
 
-    this.#model.setStockInfo(read('../../public/products.md'));
-    this.#model.setPromotionInfo(read('../../public/promotions.md'));
+    this.#model.setStock(read('../../public/products.md'));
+    this.#model.setPromotion(read('../../public/promotions.md'));
   }
 
   async init() {
