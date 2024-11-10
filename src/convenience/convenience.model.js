@@ -18,15 +18,19 @@ class ConvenienceModel {
     this.#promotions = promotions;
   }
 
+  #parseMarkdownFileContents(fileContents) {
+    return fileContents
+      .trim()
+      .split('\n')
+      .slice(1)
+      .map((fileContent) => fileContent.split(','));
+  }
+
   #parseStocks(stocks) {
     const stockInfo = {};
 
     // parsing
-    const parsedStocks = stocks
-      .trim()
-      .split('\n')
-      .slice(1)
-      .map((stock) => stock.split(','));
+    const parsedStocks = this.#parseMarkdownFileContents(stocks);
 
     // init
     parsedStocks.forEach((stock) => {
@@ -68,8 +72,6 @@ class ConvenienceModel {
   }
 
   getStocks() {
-    // console.log(DateTimes.now().toISOString().split('T')[0]);
-
     return this.#parseStocks(this.#stocks);
   }
 
@@ -77,11 +79,7 @@ class ConvenienceModel {
     const promotionInfo = {};
 
     // parsing
-    const parsedPromotions = promotions
-      .trim()
-      .split('\n')
-      .slice(1)
-      .map((stock) => stock.split(','));
+    const parsedPromotions = this.#parseMarkdownFileContents(promotions);
 
     parsedPromotions.forEach((promotion) => {
       const [name, buy, get, startDate, endDate] = promotion;
