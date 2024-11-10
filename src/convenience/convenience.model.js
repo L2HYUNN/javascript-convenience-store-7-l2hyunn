@@ -1,8 +1,6 @@
 import { DateTimes } from '@woowacourse/mission-utils';
 
 class ConvenienceModel {
-  #stocks;
-
   #stockInfo = {};
 
   #promotions;
@@ -19,8 +17,7 @@ class ConvenienceModel {
     DEFAULT: { default: { price: 0, quantity: 0 }, promotion: null },
   };
 
-  constructor(stocks, promotions) {
-    this.#stocks = stocks;
+  constructor(_, promotions) {
     this.#promotions = promotions;
   }
 
@@ -86,17 +83,15 @@ class ConvenienceModel {
     });
   }
 
-  #parseStocks(stocks) {
+  setStockInfo(stocks) {
     const parsedStocks = this.#parseMarkdownFileContents(stocks);
 
     this.#initializeStockInfo(parsedStocks);
     this.#fillStockInfo(parsedStocks);
-
-    return this.#stockInfo;
   }
 
   getStocks() {
-    return this.#parseStocks(this.#stocks);
+    return this.#stockInfo;
   }
 
   #parsePromotions(promotions) {

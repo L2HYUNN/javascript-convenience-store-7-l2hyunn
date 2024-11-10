@@ -12,13 +12,12 @@ class ConvenienceController {
 
   constructor(
     view = new ConvenienceView(),
-    model = new ConvenienceModel(
-      read('../../public/products.md'),
-      read('../../public/promotions.md'),
-    ),
+    model = new ConvenienceModel(undefined, read('../../public/promotions.md')),
   ) {
     this.#view = view;
     this.#model = model;
+
+    this.#model.setStockInfo(read('../../public/products.md'));
   }
 
   async init() {

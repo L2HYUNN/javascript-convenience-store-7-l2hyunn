@@ -11,6 +11,7 @@ describe('ConvenienceModel', () => {
 
   beforeEach(() => {
     convenienceModel = new ConvenienceModel(testProducts, testPromotions);
+    convenienceModel.setStockInfo(testProducts);
   });
 
   it('상품 목록 파일에 있는 내용을 불러와 상품 목록 객체로 저장할 수 있어야 한다', () => {
