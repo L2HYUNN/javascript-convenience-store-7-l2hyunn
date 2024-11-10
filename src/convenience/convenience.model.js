@@ -139,13 +139,16 @@ class ConvenienceModel {
     }));
   }
 
+  #hasPromotion(purchaseInfoName) {
+    return Boolean(this.#stockInfo[purchaseInfoName].promotion);
+  }
+
   getPromotableItem(parsedPurchaseInfo) {
     const { name, quantity } = parsedPurchaseInfo;
 
-    const hasPromotion = Boolean(this.#stockInfo[name].promotion);
     const promotionName = this.#stockInfo[name].promotion?.promotion;
 
-    if (hasPromotion) {
+    if (this.#hasPromotion(name)) {
       const promotions = this.getPromotions();
       const stockQuantity = this.#stockInfo[name].promotion.quantity;
 
