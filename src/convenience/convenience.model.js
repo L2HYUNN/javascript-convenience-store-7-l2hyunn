@@ -185,6 +185,87 @@ class ConvenienceModel {
     return parsedPurchaseInfo.map((info) => this.getNonPromotionalItem(info));
   }
 
+  getPromotionInfo(parsedPurchaseInfo) {
+    const stocks = this.getStocks();
+
+    const { name, quantity } = parsedPurchaseInfo;
+
+    const hasPromotion = Boolean(stocks[name].promotion);
+    const promotionName = stocks[name].promotion?.promotion;
+
+    if (hasPromotion) {
+      const promotions = this.getPromotions();
+      const stockQuantity = stocks[name].promotion.quantity;
+
+      const { buy, get, startDate, endDate } = promotions[promotionName];
+
+      const today = DateTimes.now().toISOString().split('T')[0];
+
+      const isPromotable =
+        new Date(startDate) <= new Date(today) &&
+        new Date(today) < new Date(endDate) &&
+        quantity < stockQuantity;
+
+      const promotableStockCount = Math.trunc(stockQuantity / (buy + get));
+      const promotableCount = Math.trunc(quantity / (buy + get));
+
+      if (isPromotable) {
+        if (promotableCount <= promotableStockCount) {
+          return { name, quantity: promotableCount };
+        }
+        return { name, quantity: promotableStockCount };
+      }
+    }
+
+    return null;
+  }
+
+  getReceipt(parsedPurchaseInfo, isMembershipDiscount) {
+    const stocks = this.getStocks();
+
+    const receipt = {
+      purchaseInfo: [],
+      promotionInfo: [],
+      totalPurchasePrice: { quantity: 0, price: 0 },
+      prmotionDiscountPrice: 0,
+      membershipDiscountPrice: 0,
+      amountDue: 0,
+    };
+
+    parsedPurchaseInfo.forEach((info) => {
+      receipt.purchaseInfo.push({
+        name: info.name,
+        quantity: info.quantity,
+        price: info.quantity * stocks[info.name].default.price,
+      });
+
+      receipt.totalPurchasePrice.quantity += info.quantity;
+      receipt.totalPurchasePrice.price += info.quantity * stocks[info.name].default.price;
+
+      const promotableItem = this.getPromotionInfo(info);
+
+      if (promotableItem) {
+        receipt.promotionInfo.push(promotableItem);
+      }
+    });
+
+    receipt.promotionInfo.forEach((info) => {
+      receipt.prmotionDiscountPrice += info.quantity * stocks[info.name].default.price;
+    });
+
+    if (isMembershipDiscount) {
+      receipt.membershipDiscountPrice =
+        (receipt.totalPurchasePrice.price - receipt.prmotionDiscountPrice) * 0.3;
+    }
+
+    receipt.amountDue =
+      receipt.totalPurchasePrice.price -
+      receipt.prmotionDiscountPrice -
+      receipt.membershipDiscountPrice;
+
+    return receipt;
+  }
+
   validatePurchaseInfo(purchaseInfo) {
     const purchaseInfoRegex = /^\[[가-힣]+-\d+\]$/;
     const purchaseInfoNameCaptureRegex = /^\[([가-힣]+)-\d+\]$/;

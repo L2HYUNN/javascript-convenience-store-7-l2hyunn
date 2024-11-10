@@ -168,4 +168,29 @@ describe('ConvenienceModel', () => {
       expect(result).toEqual([{ name: '콜라', quantity: 6 }]);
     });
   });
+
+  it('구매할 상품명, 수량, 프로모션 여부, 멤버십 할인 여부를 입력받아 영수증 객체를 반환해야 한다', () => {
+    const parsedInput = [
+      { name: '콜라', quantity: 3 },
+      { name: '물', quantity: 5 },
+    ];
+
+    const isMembershipDiscount = true;
+
+    const receipt = {
+      purchaseInfo: [
+        { name: '콜라', quantity: 3, price: 3000 },
+        { name: '물', quantity: 5, price: 2500 },
+      ],
+      promotionInfo: [{ name: '콜라', quantity: 1 }],
+      totalPurchasePrice: { quantity: 8, price: 5500 },
+      prmotionDiscountPrice: 1000,
+      membershipDiscountPrice: 1350,
+      amountDue: 3150,
+    };
+
+    const result = convenienceModel.getReceipt(parsedInput, isMembershipDiscount);
+
+    expect(result).toEqual(receipt);
+  });
 });

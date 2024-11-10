@@ -33,6 +33,8 @@ class ConvenienceController {
 
     this.#model.validatePurchaseInfo(purchaseInfo);
     const parsedPurchaseInfo = this.#model.parsePurchaseInfo(purchaseInfo);
+
+    // 프로모션 적용이 가능한 상품에 대해 고객이 해당 수량보다 적게 가져온 경우
     const promotableItems = this.#model.getPromotableItems(parsedPurchaseInfo);
     const shouldAddItemForPromotionList = [];
 
@@ -51,6 +53,13 @@ class ConvenienceController {
       }
     }
 
+    // 증정 받을 수 있는 상품을 추가한다.
+    shouldAddItemForPromotionList.forEach((item) => {
+      const itemIndex = parsedPurchaseInfo.findIndex((info) => info.name === item);
+      parsedPurchaseInfo[itemIndex].quantity += 1;
+    });
+
+    // 프로모션 재고가 부족하여 일부 수량을 프로모션 혜택 없이 결제해야 하는 경우
     const nonPromotionalItems = this.#model.getNonPromotionalItems(parsedPurchaseInfo);
     const shouldAddItemWithoutPromotionList = [];
 
@@ -65,7 +74,7 @@ class ConvenienceController {
       );
       this.#view.printLineBreak();
 
-      if (answer === 'Y') {
+      if (answer === 'N') {
         shouldAddItemWithoutPromotionList.push({
           name: nonPromotionalItem.name,
           quantity: nonPromotionalItem.quantity,
@@ -73,7 +82,13 @@ class ConvenienceController {
       }
     }
 
-    console.log(shouldAddItemWithoutPromotionList);
+    // 정가로 결제해야하는 수량만큼 제외한 후 결제를 진행한다.
+    shouldAddItemWithoutPromotionList.forEach((item) => {
+      const itemIndex = parsedPurchaseInfo.findIndex((info) => info.name === item.name);
+      parsedPurchaseInfo[itemIndex].quantity -= item.quantity;
+    });
+
+    console.log(this.#model.getReceipt(parsedPurchaseInfo, true));
   }
 }
 
