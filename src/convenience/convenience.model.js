@@ -1,5 +1,9 @@
+import { DateTimes } from '@woowacourse/mission-utils';
+
 class ConvenienceModel {
   #stocks;
+
+  #promotions;
 
   static ERROR_MESSAGE = Object.freeze({
     CAN_NOT_BE_EMPTY: '[ERROR] 빈 값은 입력할 수 없어요',
@@ -9,8 +13,9 @@ class ConvenienceModel {
     STOCK_LIMIT_EXCEEDED: '[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.',
   });
 
-  constructor(stocks) {
+  constructor(stocks, promotions) {
     this.#stocks = stocks;
+    this.#promotions = promotions;
   }
 
   #parseStocks(stocks) {
@@ -28,26 +33,26 @@ class ConvenienceModel {
       const [name] = stock;
 
       stockInfo[name] = {
-        default: { price: 0, quantitiy: 0 },
+        default: { price: 0, quantity: 0 },
         promotion: null,
       };
     });
 
     // input
     parsedStocks.forEach((stock) => {
-      const [name, price, quantitiy, promotion] = stock;
+      const [name, price, quantity, promotion] = stock;
 
       // 프로모션이 존재하지 않는경우
       // 기본 상품의 재고를 0로 초기화 하고 프로모션에 대한 정보를 기입한다.
       if (promotion !== 'null') {
         stockInfo[name].default = {
           price: Number(price),
-          quantitiy: 0,
+          quantity: 0,
         };
 
         stockInfo[name].promotion = {
           price: Number(price),
-          quantitiy: Number(quantitiy),
+          quantity: Number(quantity),
           promotion,
         };
       }
@@ -55,7 +60,7 @@ class ConvenienceModel {
       // 프로모션이 존재하지 않지만 기본 재고가 있는 경우
       if (promotion === 'null') {
         stockInfo[name].default.price = Number(price);
-        stockInfo[name].default.quantitiy = Number(quantitiy);
+        stockInfo[name].default.quantity = Number(quantity);
       }
     });
 
@@ -63,7 +68,32 @@ class ConvenienceModel {
   }
 
   getStocks() {
+    // console.log(DateTimes.now().toISOString().split('T')[0]);
+
     return this.#parseStocks(this.#stocks);
+  }
+
+  #parsePromotions(promotions) {
+    const promotionInfo = {};
+
+    // parsing
+    const parsedPromotions = promotions
+      .trim()
+      .split('\n')
+      .slice(1)
+      .map((stock) => stock.split(','));
+
+    parsedPromotions.forEach((promotion) => {
+      const [name, buy, get, startDate, endDate] = promotion;
+
+      promotionInfo[name] = { buy: Number(buy), get: Number(get), startDate, endDate };
+    });
+
+    return promotionInfo;
+  }
+
+  getPromotions() {
+    return this.#parsePromotions(this.#promotions);
   }
 
   // #parsePurchaseInfo(purchaseInfo) {
@@ -71,6 +101,52 @@ class ConvenienceModel {
 
   //   return purchaseInfo.split(',');
   // }
+
+  parsePurchaseInfo(purchaseInfo) {
+    const purchaseInfoNameCaptureRegex = /^\[([가-힣]+)-[1-9]\d*\]$/;
+    const purchaseInfoQuantityCaptureRegex = /^\[[가-힣]+-([1-9])\d*\]$/;
+
+    return purchaseInfo.split(',').map((item) => {
+      const purchaseInfoName = item.trim().match(purchaseInfoNameCaptureRegex)[1];
+      const purchaseInfoQuantity = item.trim().match(purchaseInfoQuantityCaptureRegex)[1];
+
+      return { name: purchaseInfoName, quantity: Number(purchaseInfoQuantity) };
+    });
+  }
+
+  getPromotableItem(parsedPurchaseInfo) {
+    const stocks = this.getStocks();
+
+    const { name, quantity } = parsedPurchaseInfo;
+
+    const hasPromotion = Boolean(stocks[name].promotion);
+    const promotionName = stocks[name].promotion?.promotion;
+
+    if (hasPromotion) {
+      const promotions = this.getPromotions();
+      const stockQuantity = stocks[name].promotion.quantity;
+
+      const { buy, startDate, endDate } = promotions[promotionName];
+
+      const today = DateTimes.now().toISOString().split('T')[0];
+
+      const isPromotable =
+        new Date(startDate) <= new Date(today) &&
+        new Date(today) < new Date(endDate) &&
+        quantity % buy === 0 &&
+        quantity < stockQuantity;
+
+      if (isPromotable) {
+        return name;
+      }
+    }
+
+    return null;
+  }
+
+  getPromotableItems(parsedPurchaseInfo) {
+    return parsedPurchaseInfo.map((info) => this.getPromotableItem(info));
+  }
 
   validatePurchaseInfo(purchaseInfo) {
     const purchaseInfoRegex = /^\[[가-힣]+-[1-9]\d*\]$/;

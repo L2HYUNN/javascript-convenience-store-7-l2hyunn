@@ -1,16 +1,8 @@
-import ConvenienceView from './convenience/convenience.view.js';
-import ConvenienceModel from './convenience/convenience.model.js';
-import { read } from './lib/file.js';
+import ConvenienceController from './convenience/convenience.controller.js';
 
 class App {
   async run() {
-    new ConvenienceView().printWelcomeMessage();
-
-    new ConvenienceView().printStocksInfo();
-
-    new ConvenienceView().printStocks(
-      new ConvenienceModel(read('../../public/products.md')).getStocks(),
-    );
+    await new ConvenienceController().init();
   }
 }
 

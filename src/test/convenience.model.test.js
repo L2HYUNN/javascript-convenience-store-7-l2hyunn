@@ -6,22 +6,25 @@ describe('ConvenienceModel', () => {
   const testProducts =
     'name,price,quantity,promotion\n콜라,1000,10,탄산2+1\n콜라,1000,10,null\n탄산수,1200,5,탄산2+1\n물,500,10,null';
 
+  const testPromotions =
+    'name,buy,get,start_date,end_date\n탄산2+1,2,1,2024-01-01,2024-12-31\nMD추천상품,1,1,2024-01-01,2024-12-31\n반짝할인,1,1,2024-11-01,2024-11-30';
+
   beforeEach(() => {
-    convenienceModel = new ConvenienceModel(testProducts);
+    convenienceModel = new ConvenienceModel(testProducts, testPromotions);
   });
 
   it('상품 목록 파일에 있는 내용을 불러와 상품 목록 객체로 저장할 수 있어야 한다', () => {
     const stocks = {
       콜라: {
-        default: { price: 1000, quantitiy: 10 },
-        promotion: { price: 1000, quantitiy: 10, promotion: '탄산2+1' },
+        default: { price: 1000, quantity: 10 },
+        promotion: { price: 1000, quantity: 10, promotion: '탄산2+1' },
       },
       탄산수: {
-        default: { price: 1200, quantitiy: 0 },
-        promotion: { price: 1200, quantitiy: 5, promotion: '탄산2+1' },
+        default: { price: 1200, quantity: 0 },
+        promotion: { price: 1200, quantity: 5, promotion: '탄산2+1' },
       },
       물: {
-        default: { price: 500, quantitiy: 10 },
+        default: { price: 500, quantity: 10 },
         promotion: null,
       },
     };
@@ -94,6 +97,57 @@ describe('ConvenienceModel', () => {
       },
     ])('$description', ({ input, expectedError }) => {
       expect(() => convenienceModel.validateAdditionalPurchaseWanted(input)).toThrow(expectedError);
+    });
+  });
+
+  it('프로모션 목록 파일에 있는 내용을 불러와 프로모션 목록 객체로 저장할 수 있어야 한다', () => {
+    const promotions = {
+      '탄산2+1': { buy: 2, get: 1, startDate: '2024-01-01', endDate: '2024-12-31' },
+      MD추천상품: { buy: 1, get: 1, startDate: '2024-01-01', endDate: '2024-12-31' },
+      반짝할인: { buy: 1, get: 1, startDate: '2024-11-01', endDate: '2024-11-30' },
+    };
+
+    const result = convenienceModel.getPromotions();
+
+    expect(result).toEqual(promotions);
+  });
+
+  it('입력받은 상품에 대한 정보를 상품명과 수량을 가진 객체의 배열로 반환할 수 있어야 한다', () => {
+    const input = '[콜라-3], [물-5]';
+
+    const parsedInput = [
+      { name: '콜라', quantity: 3 },
+      { name: '물', quantity: 5 },
+    ];
+
+    const result = convenienceModel.parsePurchaseInfo(input);
+
+    expect(result).toEqual(parsedInput);
+  });
+
+  describe('프로모션 적용이 가능한 상품에 대해 고객이 해당 수량보다 적게 가져온 경우', () => {
+    it('해당하는 상품의 상품명을 반환해야 한다', () => {
+      const parsedInput = { name: '콜라', quantity: 2 };
+
+      const result = convenienceModel.getPromotableItem(parsedInput);
+
+      expect(result).toEqual('콜라');
+    });
+
+    it('해당하는 상품들의 상품명을 배열로 반환해야 한다', () => {
+      const parsedInputs = [{ name: '콜라', quantity: 2 }];
+
+      const result = convenienceModel.getPromotableItems(parsedInputs);
+
+      expect(result).toEqual(['콜라']);
+    });
+
+    it('프로모션 재고 보다 많은 상품을 가져온 경우 null을 가진 배열을 반환해야 한다', () => {
+      const parsedInputs = [{ name: '콜라', quantity: 11 }];
+
+      const result = convenienceModel.getPromotableItems(parsedInputs);
+
+      expect(result).toEqual([null]);
     });
   });
 });

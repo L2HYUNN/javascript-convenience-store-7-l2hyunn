@@ -30,15 +30,15 @@ describe('ConvenienceView', () => {
 
     const stocks = {
       콜라: {
-        default: { price: 1000, quantitiy: 10 },
-        promotion: { price: 1000, quantitiy: 10, promotion: '탄산2+1' },
+        default: { price: 1000, quantity: 10 },
+        promotion: { price: 1000, quantity: 10, promotion: '탄산2+1' },
       },
       탄산수: {
-        default: { price: 1200, quantitiy: 0 },
-        promotion: { price: 1200, quantitiy: 5, promotion: '탄산2+1' },
+        default: { price: 1200, quantity: 0 },
+        promotion: { price: 1200, quantity: 5, promotion: '탄산2+1' },
       },
       물: {
-        default: { price: 500, quantitiy: 10 },
+        default: { price: 500, quantity: 10 },
         promotion: null,
       },
     };
