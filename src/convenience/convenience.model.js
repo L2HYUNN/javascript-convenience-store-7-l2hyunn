@@ -146,6 +146,10 @@ class ConvenienceModel {
     return this.#promotionInfo[promotionName];
   }
 
+  #getPromotionStockQuantity(purchaseInfoName) {
+    return this.#stockInfo[purchaseInfoName].promotion.quantity;
+  }
+
   #hasPromotion(purchaseInfoName) {
     return Boolean(this.#stockInfo[purchaseInfoName].promotion);
   }
@@ -158,10 +162,12 @@ class ConvenienceModel {
   }
 
   #isPromotableItem(purchaseInfoName, purchaseInfoQuantity) {
-    const stockQuantity = this.#stockInfo[purchaseInfoName].promotion.quantity;
     const { buy: promotionBuy } = this.#getPromotionInfoDetail(purchaseInfoName);
 
-    return purchaseInfoQuantity % promotionBuy === 0 && purchaseInfoQuantity < stockQuantity;
+    return (
+      purchaseInfoQuantity % promotionBuy === 0 &&
+      purchaseInfoQuantity < this.#getPromotionStockQuantity(purchaseInfoName)
+    );
   }
 
   #isPromotable(purchaseInfoName, purchaseInfoQuantity) {
@@ -185,32 +191,40 @@ class ConvenienceModel {
     return parsedPurchaseInfo.map((info) => this.getPromotableItem(info));
   }
 
+  #isNotPromotableItem(purchaseInfoName, purchaseInfoQuantity) {
+    return purchaseInfoQuantity >= this.#getPromotionStockQuantity(purchaseInfoName);
+  }
+
+  #isNotPromotable(purchaseInfoName, purchaseInfoQuantity) {
+    return (
+      this.#isPromotableDate(purchaseInfoName) &&
+      this.#isNotPromotableItem(purchaseInfoName, purchaseInfoQuantity)
+    );
+  }
+
+  #calculateNonPromotionalItemQuantity(purchaseInfoName, purchaseInfoQuantity) {
+    const { buy: promotionBuy, get: promotionGet } = this.#getPromotionInfoDetail(purchaseInfoName);
+
+    const nonPromotionalItemInStockQuantity =
+      this.#getPromotionStockQuantity(purchaseInfoName) % (promotionBuy + promotionGet);
+    const nonPromotionalItemInQuantity =
+      purchaseInfoQuantity - this.#getPromotionStockQuantity(purchaseInfoName);
+
+    return nonPromotionalItemInStockQuantity + nonPromotionalItemInQuantity;
+  }
+
+  #createNonPromotionalItem(purchaseInfoName, purchaseInfoQuantity) {
+    return {
+      name: purchaseInfoName,
+      quantity: this.#calculateNonPromotionalItemQuantity(purchaseInfoName, purchaseInfoQuantity),
+    };
+  }
+
   getNonPromotionalItem(parsedPurchaseInfo) {
     const { name, quantity } = parsedPurchaseInfo;
 
-    const hasPromotion = Boolean(this.#stockInfo[name].promotion);
-    const promotionName = this.#stockInfo[name].promotion?.promotion;
-
-    if (hasPromotion) {
-      const promotions = this.getPromotions();
-      const stockQuantity = this.#stockInfo[name].promotion.quantity;
-
-      const { buy, get, startDate, endDate } = promotions[promotionName];
-
-      const today = DateTimes.now().toISOString().split('T')[0];
-
-      const isPromotable =
-        new Date(startDate) <= new Date(today) &&
-        new Date(today) < new Date(endDate) &&
-        quantity >= stockQuantity;
-
-      if (isPromotable) {
-        const promotableItemCount = buy + get;
-        const nonPromotionalItemInStockQuantity = stockQuantity % promotableItemCount;
-        const nonPromotionalItemInQuantity = quantity - stockQuantity;
-
-        return { name, quantity: nonPromotionalItemInStockQuantity + nonPromotionalItemInQuantity };
-      }
+    if (this.#hasPromotion(name) && this.#isNotPromotable(name, quantity)) {
+      return this.#createNonPromotionalItem(name, quantity);
     }
 
     return null;
