@@ -17,6 +17,17 @@ class ConvenienceModel {
     DEFAULT: { default: { price: 0, quantity: 0 }, promotion: null },
   };
 
+  static RECEIPT = {
+    DEFAULT: {
+      purchaseInfo: [],
+      promotionInfo: [],
+      totalPurchasePrice: { quantity: 0, price: 0 },
+      promotionDiscountPrice: 0,
+      membershipDiscountPrice: 0,
+      amountDue: 0,
+    },
+  };
+
   static REGEX = {
     PURCHASE_INFO: /^\[[가-힣]+-\d+\]$/,
     PURCHASE_INFO_NAME_CAPTURE: /^\[([가-힣]+)-\d+\]$/,
@@ -277,14 +288,7 @@ class ConvenienceModel {
   }
 
   getReceipt(parsedPurchaseInfo, isMembershipDiscount) {
-    const receipt = {
-      purchaseInfo: [],
-      promotionInfo: [],
-      totalPurchasePrice: { quantity: 0, price: 0 },
-      promotionDiscountPrice: 0,
-      membershipDiscountPrice: 0,
-      amountDue: 0,
-    };
+    const receipt = { ...ConvenienceModel.RECEIPT.DEFAULT };
 
     parsedPurchaseInfo.forEach((info) => {
       receipt.purchaseInfo.push({
