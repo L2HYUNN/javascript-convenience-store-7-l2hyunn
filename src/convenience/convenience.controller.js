@@ -200,9 +200,9 @@ class ConvenienceController {
     return answer;
   }
 
-  #reopenConvenience(answer) {
+  async #reopenConvenience(answer) {
     if (answer === 'Y') {
-      this.init();
+      await this.init();
     }
   }
 
@@ -211,7 +211,7 @@ class ConvenienceController {
     write('../../public/products.md', text.join('\n'));
 
     const answer = await this.#askReopenCovenience();
-    this.#reopenConvenience(answer);
+    await this.#reopenConvenience(answer);
   }
 
   async init() {

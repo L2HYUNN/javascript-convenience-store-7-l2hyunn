@@ -16,17 +16,6 @@ class ConvenienceModel {
     STOCK_LIMIT_EXCEEDED: '[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.',
   });
 
-  static RECEIPT = {
-    DEFAULT: {
-      purchaseInfo: [],
-      promotionInfo: [],
-      totalPurchasePrice: { quantity: 0, price: 0 },
-      promotionDiscountPrice: 0,
-      membershipDiscountPrice: 0,
-      amountDue: 0,
-    },
-  };
-
   static REGEX = {
     PURCHASE_INFO: /^\[[가-힣]+-\d+\]$/,
     PURCHASE_INFO_NAME_CAPTURE: /^\[([가-힣]+)-\d+\]$/,
@@ -94,7 +83,14 @@ class ConvenienceModel {
   }
 
   #initializeReceipt() {
-    this.#receipt = { ...ConvenienceModel.RECEIPT.DEFAULT };
+    this.#receipt = {
+      purchaseInfo: [],
+      promotionInfo: [],
+      totalPurchasePrice: { quantity: 0, price: 0 },
+      promotionDiscountPrice: 0,
+      membershipDiscountPrice: 0,
+      amountDue: 0,
+    };
   }
 
   #addPurchaseInfoToReceipt(purchaseInfo) {
