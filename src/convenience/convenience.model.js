@@ -182,24 +182,24 @@ class ConvenienceModel {
     }
   }
 
-  validatePurchaseInfo(purchaseInfo) {
-    this.#validateIsEmpty(purchaseInfo);
+  #validateYesNoAnswer(value) {
+    this.#validateIsEmpty(value);
+    this.#validateIsAnswerFormat(value);
+  }
 
+  #validateInvalidInputFormat(purchaseInfo) {
     purchaseInfo.split(',').forEach((item) => {
       if (!ConvenienceModel.REGEX.PURCHASE_INFO.test(item.trim())) {
         throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT_FORMAT);
       }
     });
+  }
 
+  #validateIsProductNotFound(purchaseInfo) {
     const stockNames = Object.keys(this.#stock.getStock());
 
     purchaseInfo.split(',').forEach((item) => {
       const purchaseInfoName = this.#findPurchaseInfoName(item);
-      const purchaseInfoQuantity = this.#findPurchaseInfoQuantity(item);
-
-      if (purchaseInfoName === '물' && purchaseInfoQuantity === '7') {
-        throw new Error(ConvenienceModel.ERROR_MESSAGE.STOCK_LIMIT_EXCEEDED);
-      }
 
       if (!stockNames.some((stockName) => stockName === purchaseInfoName)) {
         throw new Error(ConvenienceModel.ERROR_MESSAGE.PRODUCT_NOT_FOUND);
@@ -207,14 +207,40 @@ class ConvenienceModel {
     });
   }
 
+  #calculateTotalStock(info) {
+    const stock = this.#stock.getStock();
+    const purchaseInfoName = this.#findPurchaseInfoName(info);
+
+    const defaultStockQuantity = stock[purchaseInfoName].default.quantity;
+    const promotionStockQuantity = stock[purchaseInfoName].promotion?.quantity || 0;
+
+    return defaultStockQuantity + promotionStockQuantity;
+  }
+
+  #validateIsStockLimitExceeded(purchaseInfo) {
+    purchaseInfo.split(',').forEach((info) => {
+      const purchaseInfoQuantity = this.#findPurchaseInfoQuantity(info);
+      const totalStock = this.#calculateTotalStock(info);
+
+      if (Number(purchaseInfoQuantity) > totalStock) {
+        throw new Error(ConvenienceModel.ERROR_MESSAGE.STOCK_LIMIT_EXCEEDED);
+      }
+    });
+  }
+
+  validatePurchaseInfo(purchaseInfo) {
+    this.#validateIsEmpty(purchaseInfo);
+    this.#validateInvalidInputFormat(purchaseInfo);
+    this.#validateIsProductNotFound(purchaseInfo);
+    this.#validateIsStockLimitExceeded(purchaseInfo);
+  }
+
   validateMembershipDiscount(membershipDiscount) {
-    this.#validateIsEmpty(membershipDiscount);
-    this.#validateIsAnswerFormat(membershipDiscount);
+    this.#validateYesNoAnswer(membershipDiscount);
   }
 
   validateAdditionalPurchaseWanted(additionalPurchaseWanted) {
-    this.#validateIsEmpty(additionalPurchaseWanted);
-    this.#validateIsAnswerFormat(additionalPurchaseWanted);
+    this.#validateYesNoAnswer(additionalPurchaseWanted);
   }
 }
 

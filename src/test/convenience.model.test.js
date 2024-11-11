@@ -60,7 +60,7 @@ describe('ConvenienceModel', () => {
       },
       {
         description: '구매 수량이 재고 수량을 초고한 경우 에러를 발생시켜야한다',
-        input: '[콜라-3], [물-7]',
+        input: '[콜라-3], [물-11]',
         expectedError: ConvenienceModel.ERROR_MESSAGE.STOCK_LIMIT_EXCEEDED,
       },
     ])('$description', ({ input, expectedError }) => {
