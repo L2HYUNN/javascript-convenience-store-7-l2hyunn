@@ -133,10 +133,20 @@ class ConvenienceModel {
     });
   }
 
+  #calculateMembershipDiscountPrice() {
+    const membershipDiscountPrice =
+      (this.#receipt.totalPurchasePrice.price - this.#receipt.promotionDiscountPrice) * 0.3;
+
+    if (membershipDiscountPrice > 8000) {
+      return 8000;
+    }
+
+    return membershipDiscountPrice;
+  }
+
   #addMembershipDiscountPriceToReceipt(isMembershipDiscount) {
     if (isMembershipDiscount === 'Y') {
-      this.#receipt.membershipDiscountPrice =
-        (this.#receipt.totalPurchasePrice.price - this.#receipt.promotionDiscountPrice) * 0.3;
+      this.#receipt.membershipDiscountPrice = this.#calculateMembershipDiscountPrice();
     }
   }
 
