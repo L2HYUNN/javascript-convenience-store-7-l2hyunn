@@ -239,10 +239,12 @@ class ConvenienceModel {
     this.#validateIsStockLimitExceeded(purchaseInfo);
   }
 
+  // deprecated
   validateMembershipDiscount(membershipDiscount) {
     this.validateYesNoAnswer(membershipDiscount);
   }
 
+  // deprecated
   validateAdditionalPurchaseWanted(additionalPurchaseWanted) {
     this.validateYesNoAnswer(additionalPurchaseWanted);
   }
