@@ -2,7 +2,7 @@
 /* eslint-disable no-continue */
 /* eslint-disable no-restricted-syntax */
 import { read } from '../lib/file.js';
-import { safeInput } from '../lib/utils.js';
+import { filterNonNull, safeInput } from '../lib/utils.js';
 import ConvenienceModel from './convenience.model.js';
 import ConvenienceView from './convenience.view.js';
 
@@ -91,23 +91,23 @@ class ConvenienceController {
     return answer;
   }
 
-  async #processPromotableItems(parsedPurchaseInfo) {
-    const promotableItems = this.#model.getPromotableItems(parsedPurchaseInfo);
-    const shouldAddItemForPromotionList = [];
-
+  async #createshouldAddItemForPromotionList(promotableItems, shouldAddItemForPromotionList) {
     for (const promotableItem of promotableItems) {
-      if (promotableItem === null) {
-        continue;
-      }
-
       const answer = await this.#readShouldAddItemForPromotion(promotableItem);
 
-      if (answer === 'Y') {
-        shouldAddItemForPromotionList.push(promotableItem);
-      }
+      if (answer === 'Y') shouldAddItemForPromotionList.push(promotableItem);
     }
+  }
 
-    // 증정 받을 수 있는 상품을 추가한다.
+  async #createShouldAddItemForPromotion(promotableItems) {
+    const shouldAddItemForPromotionList = [];
+
+    await this.#createshouldAddItemForPromotionList(promotableItems, shouldAddItemForPromotionList);
+
+    return shouldAddItemForPromotionList;
+  }
+
+  #addItemForPromotion(parsedPurchaseInfo, shouldAddItemForPromotionList) {
     shouldAddItemForPromotionList.forEach((item) => {
       const itemIndex = parsedPurchaseInfo.findIndex((info) => info.name === item);
       // eslint-disable-next-line no-param-reassign
@@ -115,35 +115,54 @@ class ConvenienceController {
     });
   }
 
-  async #processNonPromotionalItems(parsedPurchaseInfo) {
-    // 프로모션 재고가 부족하여 일부 수량을 프로모션 혜택 없이 결제해야 하는 경우
-    const nonPromotionalItems = this.#model.getNonPromotionalItems(parsedPurchaseInfo);
-    const shouldAddItemWithoutPromotionList = [];
+  async #processPromotableItems(parsedPurchaseInfo) {
+    const promotableItems = this.#model.getPromotableItems(parsedPurchaseInfo);
+    const shouldAddItemForPromotionList = await this.#createShouldAddItemForPromotion(
+      filterNonNull(promotableItems),
+    );
 
-    for (const nonPromotionalItem of nonPromotionalItems) {
-      if (nonPromotionalItem === null) {
-        continue;
-      }
+    this.#addItemForPromotion(parsedPurchaseInfo, shouldAddItemForPromotionList);
+  }
 
-      const answer = await this.#readShouldAddItemWithoutPromotion(
-        nonPromotionalItem.name,
-        nonPromotionalItem.quantity,
-      );
+  async #createshouldAddItemWithoutPromotionList(
+    nonPromotionalItems,
+    shouldAddItemWithoutPromotionList,
+  ) {
+    for (const { name, quantity } of nonPromotionalItems) {
+      const answer = await this.#readShouldAddItemWithoutPromotion(name, quantity);
 
       if (answer === 'N') {
-        shouldAddItemWithoutPromotionList.push({
-          name: nonPromotionalItem.name,
-          quantity: nonPromotionalItem.quantity,
-        });
+        shouldAddItemWithoutPromotionList.push({ name, quantity });
       }
     }
+  }
 
-    // 정가로 결제해야하는 수량만큼 제외한 후 결제를 진행한다.
+  async #createshouldAddItemWithoutPromotion(nonPromotionalItems) {
+    const shouldAddItemWithoutPromotionList = [];
+
+    await this.#createshouldAddItemWithoutPromotionList(
+      nonPromotionalItems,
+      shouldAddItemWithoutPromotionList,
+    );
+
+    return shouldAddItemWithoutPromotionList;
+  }
+
+  #addItemWithoutPromotion(parsedPurchaseInfo, shouldAddItemWithoutPromotionList) {
     shouldAddItemWithoutPromotionList.forEach((item) => {
       const itemIndex = parsedPurchaseInfo.findIndex((info) => info.name === item.name);
       // eslint-disable-next-line no-param-reassign
       parsedPurchaseInfo[itemIndex].quantity -= item.quantity;
     });
+  }
+
+  async #processNonPromotionalItems(parsedPurchaseInfo) {
+    const nonPromotionalItems = this.#model.getNonPromotionalItems(parsedPurchaseInfo);
+    const shouldAddItemWithoutPromotionList = await this.#createshouldAddItemWithoutPromotion(
+      filterNonNull(nonPromotionalItems),
+    );
+
+    this.#addItemWithoutPromotion(parsedPurchaseInfo, shouldAddItemWithoutPromotionList);
   }
 
   async init() {

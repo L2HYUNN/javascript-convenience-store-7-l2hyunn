@@ -26,3 +26,7 @@ export async function safeInput(input, { onInput, onError }) {
     }
   }
 }
+
+export function filterNonNull(values) {
+  return values.filter((value) => value !== null);
+}
