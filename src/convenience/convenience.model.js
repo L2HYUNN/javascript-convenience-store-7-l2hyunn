@@ -254,8 +254,8 @@ class ConvenienceModel {
 
   validatePurchaseInfo(purchaseInfo) {
     this.#validateIsEmpty(purchaseInfo);
-    this.#validateIsPositiveInteger(purchaseInfo);
     this.#validateInvalidInputFormat(purchaseInfo);
+    this.#validateIsPositiveInteger(purchaseInfo);
     this.#validateIsProductNotFound(purchaseInfo);
     this.#validateIsStockLimitExceeded(purchaseInfo);
   }
