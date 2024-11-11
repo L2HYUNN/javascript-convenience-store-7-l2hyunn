@@ -1,3 +1,4 @@
+import { filterNonNull } from '../lib/utils.js';
 import { input, output } from '../lib/view.js';
 
 class ConvenienceView {
@@ -36,40 +37,65 @@ class ConvenienceView {
     output(ConvenienceView.MESSAGE.STOCKS_INFO);
   }
 
-  printStocks(stocks) {
-    const result = Object.keys(stocks).map((stockKey) => {
-      const {
-        default: { price: defaultPrice, quantity: defaultQuantity },
-        promotion,
-      } = stocks[stockKey];
-      const message = [];
+  #createPromotionNonStockMessage(stocks, stockKey) {
+    const { promotion } = stocks[stockKey];
 
-      if (stocks[stockKey].promotion) {
-        if (promotion.quantity === 0) {
-          message.push(
-            `- ${stockKey} ${promotion.price.toLocaleString()}원 재고 없음 ${promotion.promotion}`,
-          );
-        }
+    if (stocks[stockKey].promotion && promotion.quantity === 0) {
+      return `- ${stockKey} ${promotion.price.toLocaleString()}원 재고 없음 ${promotion.promotion}`;
+    }
 
-        if (promotion.quantity !== 0) {
-          message.push(
-            `- ${stockKey} ${promotion.price.toLocaleString()}원 ${promotion.quantity}개 ${promotion.promotion}`,
-          );
-        }
-      }
+    return null;
+  }
 
-      if (defaultQuantity === 0) {
-        message.push(`- ${stockKey} ${defaultPrice.toLocaleString()}원 재고 없음`);
-      }
+  #createPromotionStockMessage(stocks, stockKey) {
+    const { promotion } = stocks[stockKey];
 
-      if (defaultQuantity !== 0) {
-        message.push(`- ${stockKey} ${defaultPrice.toLocaleString()}원 ${defaultQuantity}개`);
-      }
+    if (stocks[stockKey].promotion && promotion.quantity !== 0) {
+      return `- ${stockKey} ${promotion.price.toLocaleString()}원 ${promotion.quantity}개 ${promotion.promotion}`;
+    }
 
-      return message;
+    return null;
+  }
+
+  #createDefaultNonStockMessage(stocks, stockKey) {
+    const {
+      default: { price: defaultPrice, quantity: defaultQuantity },
+    } = stocks[stockKey];
+
+    if (defaultQuantity === 0) {
+      return `- ${stockKey} ${defaultPrice.toLocaleString()}원 재고 없음`;
+    }
+
+    return null;
+  }
+
+  #createDefaultStockMessage(stocks, stockKey) {
+    const {
+      default: { price: defaultPrice, quantity: defaultQuantity },
+    } = stocks[stockKey];
+
+    if (defaultQuantity !== 0) {
+      return `- ${stockKey} ${defaultPrice.toLocaleString()}원 ${defaultQuantity}개`;
+    }
+
+    return null;
+  }
+
+  #createStockMessage(stocks) {
+    return Object.keys(stocks).map((stockKey) => {
+      const message = [
+        this.#createPromotionNonStockMessage(stocks, stockKey),
+        this.#createPromotionStockMessage(stocks, stockKey),
+        this.#createDefaultNonStockMessage(stocks, stockKey),
+        this.#createDefaultStockMessage(stocks, stockKey),
+      ];
+
+      return filterNonNull(message);
     });
+  }
 
-    output(result.flat().join('\n'));
+  printStocks(stocks) {
+    output(this.#createStockMessage(stocks).flat().join('\n'));
     output('');
   }
 
@@ -105,7 +131,18 @@ class ConvenienceView {
     });
 
     output(
-      `==============W 편의점================\n상품명		     수량      금액   \n${purchaseInfoMessage}\n=============증     정===============\n${promotionInfoMessage}====================================\n총구매액             ${totalPurchasePrice.quantity}        ${totalPurchasePrice.price.toLocaleString()}\n행사할인		       -${promotionDiscountPrice.toLocaleString()}\n멤버십할인		       -${membershipDiscountPrice.toLocaleString()}\n내실돈		               ${amountDue.toLocaleString()}\n`,
+      `
+==============W 편의점================
+상품명             수량      금액   
+${purchaseInfoMessage}
+=============증     정===============
+${promotionInfoMessage}
+====================================
+총구매액          ${totalPurchasePrice.quantity}        ${totalPurchasePrice.price.toLocaleString()}
+행사할인                                               -${promotionDiscountPrice.toLocaleString()}
+멤버십할인                                             -${membershipDiscountPrice.toLocaleString()}
+내실돈                                                  ${amountDue.toLocaleString()}
+`,
     );
   }
 
