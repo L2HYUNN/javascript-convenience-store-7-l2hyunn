@@ -242,8 +242,19 @@ class ConvenienceModel {
     });
   }
 
+  #validateIsPositiveInteger(purchaseInfo) {
+    purchaseInfo.split(',').forEach((info) => {
+      const purchaseInfoQuantity = this.#findPurchaseInfoQuantity(info);
+
+      if (!Number.isInteger(Number(purchaseInfoQuantity)) || Number(purchaseInfoQuantity) <= 0) {
+        throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
+      }
+    });
+  }
+
   validatePurchaseInfo(purchaseInfo) {
     this.#validateIsEmpty(purchaseInfo);
+    this.#validateIsPositiveInteger(purchaseInfo);
     this.#validateInvalidInputFormat(purchaseInfo);
     this.#validateIsProductNotFound(purchaseInfo);
     this.#validateIsStockLimitExceeded(purchaseInfo);
