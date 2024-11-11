@@ -1,4 +1,5 @@
 import PromotionModel from '../promotion/promotion.model.js';
+import ReceiptModel from '../receipt/receipt.model.js';
 import StockModel from '../stock/stock.model.js';
 
 class ConvenienceModel {
@@ -6,7 +7,7 @@ class ConvenienceModel {
 
   #promotion;
 
-  #receipt = {};
+  #receipt;
 
   static ERROR_MESSAGE = Object.freeze({
     CAN_NOT_BE_EMPTY: '[ERROR] 빈 값은 입력할 수 없어요',
@@ -82,98 +83,10 @@ class ConvenienceModel {
     return this.#promotion.getPromotion(parsedPurchaseInfo);
   }
 
-  #initializeReceipt() {
-    this.#receipt = {
-      purchaseInfo: [],
-      promotionInfo: [],
-      totalPurchasePrice: { quantity: 0, price: 0 },
-      promotionDiscountPrice: 0,
-      membershipDiscountPrice: 0,
-      amountDue: 0,
-    };
-  }
-
-  #addPurchaseInfoToReceipt(purchaseInfo) {
-    const { name, quantity } = purchaseInfo;
-
-    this.#receipt.purchaseInfo.push({
-      name,
-      quantity,
-      price: quantity * this.#stock.getStock()[name].default.price,
-    });
-  }
-
-  #addTotalPurchasePriceToReceipt(purchaseInfo) {
-    const { name, quantity } = purchaseInfo;
-
-    this.#receipt.totalPurchasePrice.quantity += quantity;
-    this.#receipt.totalPurchasePrice.price += quantity * this.#stock.getStock()[name].default.price;
-  }
-
-  #addPromotionInfoToReceipt(purchaseInfo) {
-    const promotionInfo = this.getPromotion(purchaseInfo);
-
-    if (promotionInfo) {
-      this.#receipt.promotionInfo.push(promotionInfo);
-    }
-  }
-
-  #addBasicInfoToReceipt(parsedPurchaseInfo) {
-    parsedPurchaseInfo.forEach((info) => {
-      this.#addPurchaseInfoToReceipt(info);
-      this.#addTotalPurchasePriceToReceipt(info);
-      this.#addPromotionInfoToReceipt(info);
-    });
-  }
-
-  #addPromotionDiscountPriceToReceipt() {
-    this.#receipt.promotionInfo.forEach((info) => {
-      this.#receipt.promotionDiscountPrice +=
-        info.quantity * this.#stock.getStock()[info.name].default.price;
-    });
-  }
-
-  #calculateMembershipDiscountPrice() {
-    const membershipDiscountPrice =
-      (this.#receipt.totalPurchasePrice.price - this.#receipt.promotionDiscountPrice) * 0.3;
-
-    if (membershipDiscountPrice > 8000) {
-      return 8000;
-    }
-
-    return membershipDiscountPrice;
-  }
-
-  #addMembershipDiscountPriceToReceipt(isMembershipDiscount) {
-    if (isMembershipDiscount === 'Y') {
-      this.#receipt.membershipDiscountPrice = this.#calculateMembershipDiscountPrice();
-    }
-  }
-
-  #addDiscountInfoToReceipt(isMembershipDiscount) {
-    this.#addPromotionDiscountPriceToReceipt();
-    this.#addMembershipDiscountPriceToReceipt(isMembershipDiscount);
-  }
-
-  #addAmountDueToReceipt() {
-    this.#receipt.amountDue =
-      this.#receipt.totalPurchasePrice.price -
-      this.#receipt.promotionDiscountPrice -
-      this.#receipt.membershipDiscountPrice;
-  }
-
-  #generateReceipt(parsedPurchaseInfo, isMembershipDiscount) {
-    this.#initializeReceipt();
-
-    this.#addBasicInfoToReceipt(parsedPurchaseInfo);
-    this.#addDiscountInfoToReceipt(isMembershipDiscount);
-    this.#addAmountDueToReceipt();
-  }
-
   getReceipt(parsedPurchaseInfo, isMembershipDiscount) {
-    this.#generateReceipt(parsedPurchaseInfo, isMembershipDiscount);
+    this.#receipt = new ReceiptModel(this.#stock, this.#promotion);
 
-    return this.#receipt;
+    return this.#receipt.getReceipt(parsedPurchaseInfo, isMembershipDiscount);
   }
 
   updateStock(parsedPurchaseInfo) {
