@@ -178,19 +178,27 @@ class ConvenienceController {
     this.#addItemWithoutPromotion(parsedPurchaseInfo, shouldAddItemWithoutPromotionList);
   }
 
-  async #serviceConvenience() {
-    const parsedPurchaseInfo = await this.#readPurchaseInfo();
-
+  async #processPromotionItems(parsedPurchaseInfo) {
     await this.#processPromotableItems(parsedPurchaseInfo);
     await this.#processNonPromotionalItems(parsedPurchaseInfo);
+  }
 
-    const isMembershipDiscount = await this.#readIsMembershipDiscount();
-
+  async #printReceipt(parsedPurchaseInfo, isMembershipDiscount) {
     const receipt = this.#model.getReceipt(parsedPurchaseInfo, isMembershipDiscount);
 
     this.#model.updateStock(parsedPurchaseInfo);
 
     this.#view.printReceipt(receipt);
+  }
+
+  async #serviceConvenience() {
+    const parsedPurchaseInfo = await this.#readPurchaseInfo();
+
+    await this.#processPromotionItems(parsedPurchaseInfo);
+
+    const isMembershipDiscount = await this.#readIsMembershipDiscount();
+
+    await this.#printReceipt(parsedPurchaseInfo, isMembershipDiscount);
   }
 
   async #askReopenCovenience() {
