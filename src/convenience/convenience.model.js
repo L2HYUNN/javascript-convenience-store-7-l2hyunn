@@ -182,7 +182,7 @@ class ConvenienceModel {
     }
   }
 
-  #validateYesNoAnswer(value) {
+  validateYesNoAnswer(value) {
     this.#validateIsEmpty(value);
     this.#validateIsAnswerFormat(value);
   }
@@ -236,11 +236,11 @@ class ConvenienceModel {
   }
 
   validateMembershipDiscount(membershipDiscount) {
-    this.#validateYesNoAnswer(membershipDiscount);
+    this.validateYesNoAnswer(membershipDiscount);
   }
 
   validateAdditionalPurchaseWanted(additionalPurchaseWanted) {
-    this.#validateYesNoAnswer(additionalPurchaseWanted);
+    this.validateYesNoAnswer(additionalPurchaseWanted);
   }
 }
 

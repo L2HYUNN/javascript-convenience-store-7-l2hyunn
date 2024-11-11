@@ -2,6 +2,7 @@
 /* eslint-disable no-continue */
 /* eslint-disable no-restricted-syntax */
 import { read } from '../lib/file.js';
+import { safeInput } from '../lib/utils.js';
 import ConvenienceModel from './convenience.model.js';
 import ConvenienceView from './convenience.view.js';
 
@@ -26,27 +27,66 @@ class ConvenienceController {
     this.#view.printStocks(this.#model.getStocks());
   }
 
-  async #readPurchaseInfo() {
-    const purchaseInfo = await this.#view.getPurcharseInfo();
-    this.#model.validatePurchaseInfo(purchaseInfo);
-
+  #handlePurchseInfoInput = (info) => {
+    this.#model.validatePurchaseInfo(info);
     this.#view.printLineBreak();
+  };
+
+  #handleError = (error) => {
+    this.#view.printErrorMessage(error);
+    this.#view.printLineBreak();
+  };
+
+  async #readPurchaseInfo() {
+    const purchaseInfo = await safeInput(this.#view.getPurcharseInfo, {
+      onInput: this.#handlePurchseInfoInput,
+      onError: this.#handleError,
+    });
 
     return this.#model.parsePurchaseInfo(purchaseInfo);
   }
 
-  async #readShouldAddItemForPromotion(promotableItem) {
-    const answer = await this.#view.getShouldAddItemForPromotion(promotableItem);
-    // answer validation
+  #handleShouldAddItemForPromotion = (answer) => {
+    this.#model.validateYesNoAnswer(answer);
     this.#view.printLineBreak();
+  };
+
+  async #readShouldAddItemForPromotion(promotableItem) {
+    const answer = await safeInput(() => this.#view.getShouldAddItemForPromotion(promotableItem), {
+      onInput: this.#handleShouldAddItemForPromotion,
+      onError: this.#handleError,
+    });
 
     return answer;
   }
 
-  async #readShouldAddItemWithoutPromotion(name, quantity) {
-    const answer = await this.#view.getShouldAddItemWithoutPromotion(name, quantity);
-    // answer validation
+  #handleShouldAddItemWithoutPromotion = (answer) => {
+    this.#model.validateYesNoAnswer(answer);
     this.#view.printLineBreak();
+  };
+
+  async #readShouldAddItemWithoutPromotion(name, quantity) {
+    const answer = await safeInput(
+      () => this.#view.getShouldAddItemWithoutPromotion(name, quantity),
+      {
+        onInput: this.#handleShouldAddItemWithoutPromotion,
+        onError: this.#handleError,
+      },
+    );
+
+    return answer;
+  }
+
+  #handleIsMembershipDiscount = (answer) => {
+    this.#model.validateYesNoAnswer(answer);
+    this.#view.printLineBreak();
+  };
+
+  async #readIsMembershipDiscount() {
+    const answer = await safeInput(this.#view.getIsMembershipDiscount, {
+      onInput: this.#handleIsMembershipDiscount,
+      onError: this.#handleError,
+    });
 
     return answer;
   }
@@ -115,7 +155,7 @@ class ConvenienceController {
     await this.#processPromotableItems(parsedPurchaseInfo);
     await this.#processNonPromotionalItems(parsedPurchaseInfo);
 
-    const isMembershipDiscount = await this.#view.getIsMembershipDiscount();
+    const isMembershipDiscount = await this.#readIsMembershipDiscount();
 
     const receipt = this.#model.getReceipt(parsedPurchaseInfo, isMembershipDiscount);
 

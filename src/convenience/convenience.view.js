@@ -24,6 +24,10 @@ class ConvenienceView {
     output('');
   }
 
+  printErrorMessage(error) {
+    output(error.message);
+  }
+
   printWelcomeMessage() {
     output(ConvenienceView.MESSAGE.WELCOME);
   }
