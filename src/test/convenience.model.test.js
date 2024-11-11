@@ -195,4 +195,33 @@ describe('ConvenienceModel', () => {
 
     expect(result).toEqual(receipt);
   });
+
+  it('구매 품목에 따라 가지고 있는 재고를 업데이트 할 수 있어야 한다', () => {
+    const parsedInput = [
+      { name: '콜라', quantity: 3 },
+      { name: '물', quantity: 5 },
+      { name: '탄산수', quantity: 4 },
+    ];
+
+    const stocks = {
+      콜라: {
+        default: { price: 1000, quantity: 10 },
+        promotion: { price: 1000, quantity: 7, promotion: '탄산2+1' },
+      },
+      탄산수: {
+        default: { price: 1200, quantity: 0 },
+        promotion: { price: 1200, quantity: 1, promotion: '탄산2+1' },
+      },
+      물: {
+        default: { price: 500, quantity: 5 },
+        promotion: null,
+      },
+    };
+
+    convenienceModel.updateStock(parsedInput);
+
+    const result = convenienceModel.getStocks();
+
+    expect(result).toEqual(stocks);
+  });
 });

@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-continue */
 /* eslint-disable no-restricted-syntax */
-import { read } from '../lib/file.js';
+import { read, write } from '../lib/file.js';
 import { filterNonNull, safeInput } from '../lib/utils.js';
 import ConvenienceModel from './convenience.model.js';
 import ConvenienceView from './convenience.view.js';
@@ -91,6 +91,20 @@ class ConvenienceController {
     return answer;
   }
 
+  #handleIsAdditionalPurchaseWanted = (answer) => {
+    this.#model.validateYesNoAnswer(answer);
+    this.#view.printLineBreak();
+  };
+
+  async #readIsAdditionalPurchaseWanted() {
+    const answer = await safeInput(this.#view.getIsAdditionalPurchaseWanted, {
+      onInput: this.#handleIsAdditionalPurchaseWanted,
+      onError: this.#handleError,
+    });
+
+    return answer;
+  }
+
   async #createshouldAddItemForPromotionList(promotableItems, shouldAddItemForPromotionList) {
     for (const promotableItem of promotableItems) {
       const answer = await this.#readShouldAddItemForPromotion(promotableItem);
@@ -165,10 +179,7 @@ class ConvenienceController {
     this.#addItemWithoutPromotion(parsedPurchaseInfo, shouldAddItemWithoutPromotionList);
   }
 
-  async init() {
-    this.#openConvenience();
-    this.#guideConvenience();
-
+  async #serviceConvenience() {
     const parsedPurchaseInfo = await this.#readPurchaseInfo();
 
     await this.#processPromotableItems(parsedPurchaseInfo);
@@ -178,7 +189,36 @@ class ConvenienceController {
 
     const receipt = this.#model.getReceipt(parsedPurchaseInfo, isMembershipDiscount);
 
+    this.#model.updateStock(parsedPurchaseInfo);
+
     this.#view.printReceipt(receipt);
+  }
+
+  async #askReopenCovenience() {
+    const answer = await this.#readIsAdditionalPurchaseWanted();
+
+    return answer;
+  }
+
+  #reopenConvenience(answer) {
+    if (answer === 'Y') {
+      this.init();
+    }
+  }
+
+  async #closeConvenience() {
+    const text = this.#model.convertStockToText();
+    write('../../public/products.md', text.join('\n'));
+
+    const answer = await this.#askReopenCovenience();
+    this.#reopenConvenience(answer);
+  }
+
+  async init() {
+    this.#openConvenience();
+    this.#guideConvenience();
+    await this.#serviceConvenience();
+    await this.#closeConvenience();
   }
 }
 

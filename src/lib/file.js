@@ -12,3 +12,11 @@ export function read(filePath) {
     throw new Error(error.message);
   }
 }
+
+export function write(filePath, data) {
+  try {
+    fs.writeFileSync(path.resolve(__dirname, filePath), data);
+  } catch (error) {
+    throw new Error(error.message);
+  }
+}

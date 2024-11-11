@@ -170,6 +170,14 @@ class ConvenienceModel {
     return this.#receipt;
   }
 
+  updateStock(parsedPurchaseInfo) {
+    this.#stock.updateStock(parsedPurchaseInfo);
+  }
+
+  convertStockToText() {
+    return this.#stock.convertStockToText();
+  }
+
   #validateIsEmpty(value) {
     if (value === '') {
       throw new Error(ConvenienceModel.ERROR_MESSAGE.INVALID_INPUT);
