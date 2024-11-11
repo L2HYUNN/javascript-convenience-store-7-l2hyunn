@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-continue */
 /* eslint-disable no-restricted-syntax */
@@ -124,7 +125,6 @@ class ConvenienceController {
   #addItemForPromotion(parsedPurchaseInfo, shouldAddItemForPromotionList) {
     shouldAddItemForPromotionList.forEach((item) => {
       const itemIndex = parsedPurchaseInfo.findIndex((info) => info.name === item);
-      // eslint-disable-next-line no-param-reassign
       parsedPurchaseInfo[itemIndex].quantity += 1;
     });
   }
@@ -165,7 +165,6 @@ class ConvenienceController {
   #addItemWithoutPromotion(parsedPurchaseInfo, shouldAddItemWithoutPromotionList) {
     shouldAddItemWithoutPromotionList.forEach((item) => {
       const itemIndex = parsedPurchaseInfo.findIndex((info) => info.name === item.name);
-      // eslint-disable-next-line no-param-reassign
       parsedPurchaseInfo[itemIndex].quantity -= item.quantity;
     });
   }

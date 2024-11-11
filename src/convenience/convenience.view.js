@@ -15,6 +15,21 @@ class ConvenienceView {
   static MESSAGE = Object.freeze({
     WELCOME: '안녕하세요. W편의점입니다.',
     STOCKS_INFO: '현재 보유하고 있는 상품입니다.\n',
+    PURCHASE_INFO: (info) =>
+      `${info.name}		     ${info.quantity}         ${info.price.toLocaleString()}\n`,
+    PROMOTION_INFO: (info) => `${info.name}		     ${info.quantity}\n`,
+    RECEIPT: (purchaseInfoMessage, promotionInfoMessage, receipt) => `
+==============W 편의점================
+상품명             수량      금액   
+${purchaseInfoMessage}
+=============증     정===============
+${promotionInfoMessage}
+====================================
+총구매액          ${receipt.totalPurchasePrice.quantity}        ${receipt.totalPurchasePrice.price.toLocaleString()}
+행사할인                  -${receipt.promotionDiscountPrice.toLocaleString()}
+멤버십할인                -${receipt.membershipDiscountPrice.toLocaleString()}
+내실돈                     ${receipt.amountDue.toLocaleString()}
+`,
   });
 
   static FILE_PATH = Object.freeze({
@@ -99,51 +114,28 @@ class ConvenienceView {
     output('');
   }
 
-  createReceiptMessage({ purchaseInfo, promotionInfo }) {
-    const purchaseInfoMessage = purchaseInfo
-      .map((info) => {
-        return `${info.name}		     ${info.quantity}         ${info.price.toLocaleString()}\n`;
-      })
-      .join('');
+  #createPurchaseInfoMessage(purchaseInfo) {
+    return purchaseInfo.map((info) => ConvenienceView.MESSAGE.PURCHASE_INFO(info)).join('');
+  }
 
-    const promotionInfoMessage = promotionInfo
-      .map((info) => {
-        return `${info.name}		     ${info.quantity}\n`;
-      })
-      .join('');
+  #createPromotionInfoMessage(promotionInfo) {
+    return promotionInfo.map((info) => ConvenienceView.MESSAGE.PROMOTION_INFO(info)).join('');
+  }
 
-    return { purchaseInfoMessage, promotionInfoMessage };
+  createReceiptMessage(purchaseInfo, promotionInfo) {
+    return {
+      purchaseInfoMessage: this.#createPurchaseInfoMessage(purchaseInfo),
+      promotionInfoMessage: this.#createPromotionInfoMessage(promotionInfo),
+    };
   }
 
   printReceipt(receipt) {
-    const {
-      purchaseInfo,
-      promotionInfo,
-      totalPurchasePrice,
-      promotionDiscountPrice,
-      membershipDiscountPrice,
-      amountDue,
-    } = receipt;
-
-    const { purchaseInfoMessage, promotionInfoMessage } = this.createReceiptMessage({
-      purchaseInfo,
-      promotionInfo,
-    });
-
-    output(
-      `
-==============W 편의점================
-상품명             수량      금액   
-${purchaseInfoMessage}
-=============증     정===============
-${promotionInfoMessage}
-====================================
-총구매액          ${totalPurchasePrice.quantity}        ${totalPurchasePrice.price.toLocaleString()}
-행사할인                                               -${promotionDiscountPrice.toLocaleString()}
-멤버십할인                                             -${membershipDiscountPrice.toLocaleString()}
-내실돈                                                  ${amountDue.toLocaleString()}
-`,
+    const { purchaseInfoMessage, promotionInfoMessage } = this.createReceiptMessage(
+      receipt.purchaseInfo,
+      receipt.promotionInfo,
     );
+
+    output(ConvenienceView.MESSAGE.RECEIPT(purchaseInfoMessage, promotionInfoMessage, receipt));
   }
 
   async getPurcharseInfo() {
